@@ -1,0 +1,252 @@
+:root {
+    /* Light theme (Refined Kanagawa-inspired) */
+    --light-bg: #dcd7ba;          /* Warm cream background */
+    --light-fg: #16161d;          /* Deep ink for text */
+    --light-subtle: #54546d;      /* Muted purple-gray */
+    --light-primary: #7e9cd8;     /* Soft blue */
+    --light-accent1: #76946a;     /* Sage green */
+    --light-accent2: #c34043;     /* Soft red */
+    --light-card-bg: #c8c093;     /* Lighter cream for cards */
+    --light-hover: #5a7ec5;       /* Deeper blue for hover */
+    --light-shadow: rgba(49, 50, 68, 0.15); /* Shadow color */
+    --light-cta: #7e9cd8;         /* Blue CTA button */
+    --light-cta-hover: #5a7ec5;   /* Darker blue for hover */
+    --light-cta-shadow: rgba(126, 156, 216, 0.3); /* Blue shadow */
+
+    /* Dark theme (original) */
+    --dark-bg: #1b1f24;
+    --dark-fg: #fefae0;
+    --dark-subtle: #9aa0a6;
+    --dark-primary: #e76f51;     /* Orange accent */
+    --dark-accent1: #b8f2e6;
+    --dark-accent2: #cdb4db;
+    --dark-card-bg: #2a2f36;
+    --dark-hover: #d65b3f;
+    --dark-shadow: rgba(231, 111, 81, 0.3);
+    --dark-cta: #e76f51;         /* Orange CTA button */
+    --dark-cta-hover: #d65b3f;   /* Darker orange for hover */
+    --dark-cta-shadow: rgba(231, 111, 81, 0.3); /* Orange shadow */
+  }
+
+  html[data-theme="light"] {
+    --bg: var(--light-bg);
+    --fg: var(--light-fg);
+    --subtle: var(--light-subtle);
+    --primary: var(--light-primary);
+    --accent1: var(--light-accent1);
+    --accent2: var(--light-accent2);
+    --card-bg: var(--light-card-bg);
+    --hover: var(--light-hover);
+    --shadow: var(--light-shadow);
+    --cta: var(--light-cta);
+    --cta-hover: var(--light-cta-hover);
+    --cta-shadow: var(--light-cta-shadow);
+  }
+
+  html[data-theme="dark"] {
+    --bg: var(--dark-bg);
+    --fg: var(--dark-fg);
+    --subtle: var(--dark-subtle);
+    --primary: var(--dark-primary);
+    --accent1: var(--dark-accent1);
+    --accent2: var(--dark-accent2);
+    --card-bg: var(--dark-card-bg);
+    --hover: var(--dark-hover);
+    --shadow: var(--dark-shadow);
+    --cta: var(--dark-cta);
+    --cta-hover: var(--dark-cta-hover);
+    --cta-shadow: var(--dark-cta-shadow);
+  }
+
+  /* Apply transitions to html element for all CSS variables */
+  html {
+    transition: all 0.3s ease;
+  }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg);
+    color: var(--fg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  .logo {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: var(--fg);
+    position: absolute;
+    top: 2rem;
+    left: 2rem;
+    transition: color 0.3s ease;
+  }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--fg);
+    transition: color 0.3s ease;
+  }
+
+  .momentum {
+    color: var(--primary);
+    transition: color 0.3s ease;
+  }
+
+  p {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    color: var(--subtle);
+    transition: color 0.3s ease;
+  }
+
+  .cta-button {
+    background-color: var(--cta);
+    color: #ffffff;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    margin-bottom: 2rem;
+    font-weight: 600;
+  }
+
+  .cta-button:hover {
+    background-color: var(--cta-hover);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px var(--cta-shadow);
+  }
+
+  .task-input {
+    width: 90%;
+    max-width: 500px;
+    padding: 1rem;
+    border: 2px solid var(--accent1);
+    border-radius: 10px;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    resize: vertical;
+    background-color: var(--card-bg);
+    color: var(--fg);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .task-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 10px var(--cta-shadow);
+  }
+
+  .checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    background-color: var(--card-bg);
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    border: 2px solid var(--accent1);
+    max-width: 500px;
+    margin-bottom: 2rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .checkbox-container:hover {
+    box-shadow: 0 4px 8px var(--shadow);
+  }
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--primary);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  input[type="checkbox"]:hover {
+    transform: scale(1.1);
+  }
+
+  .task-text {
+    display: inline-block;
+    color: var(--fg);
+    transition: color 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+  }
+
+  input[type="checkbox"]:checked + label .task-text {
+    color: var(--subtle);
+    opacity: 0.6;
+    transform: translateX(3px);
+  }
+
+  label {
+    transition: color 0.3s ease;
+    cursor: pointer;
+  }
+
+  /* Fade-in animation */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Footer */
+  .footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: var(--bg);
+    border-top: 1px solid var(--card-bg);
+    color: var(--subtle);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    z-index: 10;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+  }
+
+  .footer a {
+    color: var(--subtle);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+
+  .footer a:hover {
+    color: var(--primary);
+  }
+
+  /* Theme toggle label */
+  .theme-label {
+    margin-left: 10px;
+    font-size: 0.9rem;
+    color: var(--subtle);
+    transition: color 0.3s ease;
+  }
+
+  /* Placeholder text color */
+  ::placeholder {
+    color: var(--subtle);
+    opacity: 0.7;
+    transition: color 0.3s ease;
+  }
