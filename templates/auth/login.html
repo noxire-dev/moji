@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex flex-column align-items-center justify-content-center min-vh-100">
+  <div class="logo position-absolute top-0 start-0 m-4">
+    <a href="{{ url_for('index') }}">Moji</a>
+  </div>
+
+  <div class="row w-100 justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="login-card fade-in">
+        <div class="login-header text-center mb-4">
+          <img src="/static/img/logo.svg" alt="Moji Logo" class="logo-img mb-3" height="60px" width="60px">
+          <h1 class="mb-2">Welcome Back</h1>
+          <p class="text-muted">Log in to continue your momentum</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="needs-validation" novalidate>
+          <div class="form-group mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" class="form-control task-input" id="email" name="email" placeholder="Enter your email" required>
+            <div class="invalid-feedback">Please enter a valid email.</div>
+          </div>
+
+          <div class="form-group mb-4">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control task-input" id="password" name="password" placeholder="Enter your password" required>
+            <div class="invalid-feedback">Please enter your password.</div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="remember" name="remember">
+              <label class="form-check-label" for="remember">Remember me</label>
+            </div>
+            <a href="{{ url_for('auth.forgot_password') }}" class="forgot-password">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn cta-button w-100 mb-4">Sign In</button>
+        </form>
+
+        <div class="text-center">
+          <p class="mb-0">Don't have an account? <a href="{{ url_for('auth.register') }}" class="signup-link">Register</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Form validation
+  (function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+  })()
+</script>
+{% endblock %}

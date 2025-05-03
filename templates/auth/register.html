@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex flex-column align-items-center justify-content-center min-vh-100">
+  <div class="logo position-absolute top-0 start-0 m-4">
+    <a href="{{ url_for('index') }}">Moji</a>
+  </div>
+
+  <div class="row w-100 justify-content-center">
+    <div class="col-md-8 col-lg-7">
+      <div class="login-card fade-in">
+        <div class="login-header text-center mb-4">
+          <img src="/static/img/logo.svg" alt="Moji Logo" class="logo-img mb-3" height="60px" width="60px">
+          <h1 class="mb-2">Join Moji</h1>
+          <p class="text-muted">Create your account to start building momentum</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}" class="needs-validation" novalidate>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label for="name" class="form-label">Username</label>
+                <input type="text" class="form-control task-input" id="name" name="name" placeholder="Enter your username" required>
+                <div class="invalid-feedback">Please enter your username.</div>
+                <div class="form-text text-muted">This will be your display name.</div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control task-input" id="email" name="email" placeholder="Enter your email" required>
+                <div class="invalid-feedback">Please enter a valid email.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" class="form-control task-input" id="password" name="password" placeholder="Create a password" required>
+                <div class="invalid-feedback">Please enter a password.</div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label for="confirm_password" class="form-label">Confirm Password</label>
+                <input type="password" class="form-control task-input" id="confirm_password" name="confirm_password" placeholder="Confirm your password" required>
+                <div class="invalid-feedback">Passwords do not match.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group mb-4">
+            <label for="invite_code" class="form-label">Invite Code</label>
+            <input type="text" class="form-control task-input" id="invite_code" name="invite_code" placeholder="Enter your invite code" required>
+            <div class="form-text text-muted">An invite code is required to join Moji.</div>
+            <div class="invalid-feedback">Please enter a valid invite code.</div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="terms" name="terms" required>
+              <label class="form-check-label" for="terms">I agree to the <a href="#" class="text-link">Terms of Service</a></label>
+            </div>
+          </div>
+
+          <button type="submit" class="btn cta-button w-100 mb-4">Create Account</button>
+        </form>
+
+        <div class="text-center">
+          <p class="mb-0">Already have an account? <a href="{{ url_for('auth.login') }}" class="signup-link">Sign in</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Form validation
+  (function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+
+        // Check if passwords match
+        const password = document.getElementById('password')
+        const confirmPassword = document.getElementById('confirm_password')
+        if (password.value !== confirmPassword.value) {
+          confirmPassword.setCustomValidity("Passwords don't match")
+          event.preventDefault()
+          event.stopPropagation()
+        } else {
+          confirmPassword.setCustomValidity('')
+        }
+
+        form.classList.add('was-validated')
+      }, false)
+    })
+  })()
+</script>
+{% endblock %}

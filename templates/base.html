@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Moji{% endblock %}</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style/stylesheet.css">
+  <script>
+    // Prevent flash of incorrect theme
+    (function() {
+      // Get stored theme or default to light
+      const storedTheme = localStorage.getItem('theme');
+      const theme = storedTheme || 'light';
+
+      // Get stored texture or default to off
+      const storedTexture = localStorage.getItem('texture');
+      const texture = storedTexture || 'off';
+
+      // Set the theme and texture attributes
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.setAttribute('data-texture', texture);
+
+      // Update checkbox states if they exist
+      const themeCheckbox = document.getElementById('task1');
+      const textureCheckbox = document.getElementById('textureToggle');
+
+      if (themeCheckbox) {
+        themeCheckbox.checked = theme === 'dark';
+      }
+
+      if (textureCheckbox) {
+        textureCheckbox.checked = texture === 'on';
+      }
+    })();
+  </script>
+  {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+  {% block content %}{% endblock %}
+
+  <footer class="footer">
+    <div class="footer-left">A quiet tool for noisy days — @noxire</div>
+    <div class="footer-right">© 2025 Moji</div>
+  </footer>
+
+  <!-- Bootstrap JS Bundle with Popper -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Theme toggle functionality
+    const themeCheckbox = document.getElementById('task1');
+    const textureCheckbox = document.getElementById('textureToggle');
+
+    if (themeCheckbox) {
+      themeCheckbox.addEventListener('change', function () {
+        const newTheme = this.checked ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+      });
+    }
+
+    if (textureCheckbox) {
+      textureCheckbox.addEventListener('change', function () {
+        const newTexture = this.checked ? 'on' : 'off';
+        document.documentElement.setAttribute('data-texture', newTexture);
+        localStorage.setItem('texture', newTexture);
+      });
+    }
+  </script>
+  {% block extra_scripts %}{% endblock %}
+</body>
+
+</html>
