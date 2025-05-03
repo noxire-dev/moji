@@ -8,7 +8,7 @@ db = SQLAlchemy()
 class User(db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    display_name = db.Column(db.String(64), nullable=False, index=True)
+    display_name = db.Column(db.String(64), nullable=False)
     handler_name = db.Column(db.String(64), nullable=False, unique=True, index=True)
     email = db.Column(db.String(128), unique=True, nullable=False, index=True)
     _password_hash = db.Column(db.String(128), nullable=False)
@@ -22,10 +22,10 @@ class User(db.Model):
 
     # Relationships
     projects = db.relationship(
-        "Project", back_populates="user", cascade="all, delete-orphan"
+        "Project", back_populates="user", cascade="all, delete-orphan", passive_deletes=True
     )
-    todos = db.relationship("Todo", back_populates="user", cascade="all, delete-orphan")
-    notes = db.relationship("Note", back_populates="user", cascade="all, delete-orphan")
+    todos = db.relationship("Todo", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
+    notes = db.relationship("Note", back_populates="user", cascade="all, delete-orphan", passive_deletes=True)
     license = db.relationship("License", back_populates="users")
 
 
@@ -33,7 +33,7 @@ class User(db.Model):
 class Project(db.Model):
     __tablename__ = "projects"
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(32), nullable=False, index=True)
+    name = db.Column(db.String(64), nullable=False, index=True)
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(
@@ -46,15 +46,14 @@ class Project(db.Model):
         index=True,
     )
     is_active = db.Column(db.Boolean, default=True, index=True)
-    _last_modified = db.Column(db.DateTime)
 
     # Relationships
     user = db.relationship("User", back_populates="projects")
     todos = db.relationship(
-        "Todo", back_populates="project", cascade="all, delete-orphan"
+        "Todo", back_populates="project", cascade="all, delete-orphan", passive_deletes=True
     )
     notes = db.relationship(
-        "Note", back_populates="project", cascade="all, delete-orphan"
+        "Note", back_populates="project", cascade="all, delete-orphan", passive_deletes=True
     )
 
     # Add unique constraint for project names per user (so no two projects can have the same name per user)
@@ -66,7 +65,7 @@ class Project(db.Model):
 class Todo(db.Model):
     __tablename__ = "todos"
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(32), nullable=False, index=True)
+    title = db.Column(db.String(64), nullable=False, index=True)
     description = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(
@@ -88,14 +87,14 @@ class Todo(db.Model):
     _completed_at = db.Column(db.DateTime)
 
     # Relationships
-    project = db.relationship("Project", back_populates="todos")
-    user = db.relationship("User", back_populates="todos")
+    project = db.relationship("Project", back_populates="todos", passive_deletes=True)
+    user = db.relationship("User", back_populates="todos", passive_deletes=True)
 
 
 class Note(db.Model):
     __tablename__ = "notes"
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(32), nullable=False, index=True)
+    title = db.Column(db.String(64), nullable=False, index=True)
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     updated_at = db.Column(
@@ -113,11 +112,10 @@ class Note(db.Model):
         nullable=False,
         index=True,
     )
-    _last_modified = db.Column(db.DateTime)
 
     # Relationships
-    project = db.relationship("Project", back_populates="notes")
-    user = db.relationship("User", back_populates="notes")
+    project = db.relationship("Project", back_populates="notes", passive_deletes=True)
+    user = db.relationship("User", back_populates="notes", passive_deletes=True)
 
 
 ## Rather than a sub-model I want to test a license model first
@@ -142,3 +140,19 @@ class License(db.Model):
         db.CheckConstraint("max_notes >= 0", name="check_max_notes_positive"),
         db.CheckConstraint("max_todos >= 0", name="check_max_todos_positive"),
     )
+
+class InviteLink(db.Model):
+    __tablename__ = "invite_links"
+    id = db.Column(db.Integer, primary_key=True)
+    link = db.Column(db.String(128), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    is_active = db.Column(db.Boolean, default=True, index=True)
+
+    # Relationships
+    redeemer = db.relationship("User", back_populates="invite_links")
