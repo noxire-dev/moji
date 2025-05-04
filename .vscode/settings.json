@@ -1,7 +1,4 @@
 {
-  "cSpell.words": [
-    "ondelete",
-    "onupdate"
-  ],
+  "cSpell.words": ["backref", "ondelete", "onupdate"],
   "svg.preview.background": "dark-transparent"
 }
