@@ -118,7 +118,7 @@ class User(BaseModel):
     _login_attempts = db.Column(db.Integer, default=0)
     license_id = db.Column(db.Integer, db.ForeignKey("licenses.id"), nullable=True)
 
-    _protected_fields = BaseModel._protected_fields.union(
+    _protected_fields = BaseModel._protected_fields.append(
         ["public_id", "username", "display_name", "email"]
     )
 
@@ -193,7 +193,7 @@ class Project(BaseModel):
         db.UniqueConstraint("name", "owner_id", name="uix_project_name_owner"),
     )
 
-    _protected_fields = BaseModel._protected_fields.union(["owner_id"])
+    _protected_fields = BaseModel._protected_fields.append(["owner_id"])
 
     @classmethod
     def remove_todo(cls, instance, todo_id):
@@ -256,7 +256,7 @@ class Todo(BaseModel):
         index=True,
     )
 
-    _protected_fields = BaseModel._protected_fields.union(["project_id", "owner_id"])
+    _protected_fields = BaseModel._protected_fields.append(["project_id", "owner_id"])
 
     is_completed = db.Column(db.Boolean, default=False, index=True)
     _completed_at = db.Column(db.DateTime)
@@ -304,7 +304,7 @@ class Note(BaseModel):
         index=True,
     )
 
-    _protected_fields = BaseModel._protected_fields.union(["project_id", "owner_id"])
+    _protected_fields = BaseModel._protected_fields.append(["project_id", "owner_id"])
 
     # Relationships
     project = db.relationship("Project", back_populates="notes", passive_deletes=True)
@@ -351,7 +351,7 @@ class InviteLink(BaseModel):
         index=True,
     )
 
-    _protected_fields = BaseModel._protected_fields.union(
+    _protected_fields = BaseModel._protected_fields.append(
         ["owner_id", "is_active", "link"]
     )
 
