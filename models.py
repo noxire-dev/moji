@@ -7,6 +7,8 @@ from flask_sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
+# TODO: Start small first with todo and notes connected to a project later on add tags and time lines and segments.
+
 
 class BaseModel(db.Model):
     """Base model for all models."""
@@ -21,7 +23,7 @@ class BaseModel(db.Model):
         nullable=False,
     )
     is_deleted = db.Column(db.Boolean, default=False, index=True)
-
+    tags = db.relationship("Tag", back_populates="todos", passive_deletes=True)
     _protected_fields = ["id", "created_at", "updated_at"]
 
     def save(self):
@@ -284,6 +286,27 @@ class Todo(BaseModel):
         return bool(self.description and self.description.strip())
 
 
+# todo model with X amount of repetitions like you need to do it 3 times
+class TodoRepetition(Todo):
+    """Todo model with X amount of repetitions."""
+
+    __tablename__ = "todo_repetitions"
+    repetitions = db.Column(db.Integer, nullable=False)
+    current_repetition = db.Column(db.Integer, nullable=False)
+
+    def mark_completed(self):
+        """Mark a todo as completed."""
+        if self.current_repetition >= self.repetitions:
+            self.is_completed = True
+            self._completed_at = datetime.now(UTC)
+            self.save()
+            return self
+        else:
+            self.current_repetition += 1
+            self.save()
+            return self
+
+
 class Note(BaseModel):
     """Note model for storing text content."""
 
@@ -309,6 +332,62 @@ class Note(BaseModel):
     # Relationships
     project = db.relationship("Project", back_populates="notes", passive_deletes=True)
     user = db.relationship("User", back_populates="notes", passive_deletes=True)
+
+
+# basic tag system for organizing thinking of doing a class or segment system or a timeline event hopefully
+class Tag(BaseModel):
+    """Tag model for organizing todos and notes."""
+
+    __tablename__ = "tags"
+    name = db.Column(db.String(64), nullable=False, index=True)
+    color = db.Column(db.String(64), nullable=False, index=True)
+
+    # Relationships
+    todos = db.relationship("Todo", back_populates="tags", passive_deletes=True)
+    notes = db.relationship("Note", back_populates="tags", passive_deletes=True)
+
+
+# TODO: Make a time line model that can be used to organize todos and notes inside of a project.
+class TimeLine(BaseModel):
+    """TimeLine model for organizing todos and notes inside of a project."""
+
+    __tablename__ = "time_lines"
+    name = db.Column(db.String(64), nullable=False, index=True)
+    color = db.Column(db.String(64), nullable=False, index=True)
+    project_id = db.Column(
+        db.Integer,
+        db.ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    segments = db.relationship(
+        "Segment", back_populates="time_lines", passive_deletes=True
+    )
+
+    # Relationships
+    todos = db.relationship("Todo", back_populates="time_lines", passive_deletes=True)
+    notes = db.relationship("Note", back_populates="time_lines", passive_deletes=True)
+
+
+# TODO: Make a segment model that can be used to organize todos and notes inside of a timeline.
+class Segment(BaseModel):
+    """Segment model for organizing todos and notes inside of a time line."""
+
+    __tablename__ = "segments"
+    name = db.Column(db.String(64), nullable=False, index=True)
+    context = db.Column(db.String(64), nullable=False, index=True)
+    color = db.Column(db.String(64), nullable=False, index=True)
+    time_line_id = db.Column(
+        db.Integer,
+        db.ForeignKey("time_lines.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    todos = db.relationship("Todo", back_populates="segments", passive_deletes=True)
+    notes = db.relationship("Note", back_populates="segments", passive_deletes=True)
+    timeline = db.relationship(
+        "TimeLine", back_populates="segments", passive_deletes=True
+    )
 
 
 ## Rather than a sub-model I want to test a license model first
