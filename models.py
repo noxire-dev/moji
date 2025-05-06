@@ -40,7 +40,7 @@ class BaseModel(db.Model):
                     raise e
         return self
 
-    def delete(self):
+    def hard_delete(self):
         """Delete the model from the database."""
         db.session.delete(self)
         db.session.commit()
