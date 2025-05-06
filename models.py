@@ -23,7 +23,6 @@ class BaseModel(db.Model):
         nullable=False,
     )
     is_deleted = db.Column(db.Boolean, default=False, index=True)
-    tags = db.relationship("Tag", back_populates="todos", passive_deletes=True)
     _protected_fields = ["id", "created_at", "updated_at"]
 
     def save(self):
@@ -89,14 +88,16 @@ class BaseModel(db.Model):
         """Convert the model to a dictionary."""
         return {c.name: getattr(instance, c.name) for c in cls.__table__.columns}
 
-    @classmethod
-    def update(cls, instance, **kwargs):
+    @staticmethod
+    def update(instance, **kwargs):
         """Update the model with validation."""
         for key, value in kwargs.items():
-            if key in cls._protected_fields or key.startswith("_"):
+            if key in instance._protected_fields or key.startswith("_"):
                 raise ValueError(f"Cannot update protected or private field: {key}")
             if not hasattr(instance, key):
-                raise ValueError(f"Field {key} does not exist on model {cls.__name__}")
+                raise ValueError(
+                    f"Field {key} does not exist on model {instance.__class__.__name__}"
+                )
             setattr(instance, key, value)
         return instance.save()
 
@@ -120,9 +121,12 @@ class User(BaseModel):
     _login_attempts = db.Column(db.Integer, default=0)
     license_id = db.Column(db.Integer, db.ForeignKey("licenses.id"), nullable=True)
 
-    _protected_fields = BaseModel._protected_fields.append(
-        ["public_id", "username", "display_name", "email"]
-    )
+    _protected_fields = BaseModel._protected_fields + [
+        "public_id",
+        "username",
+        "display_name",
+        "email",
+    ]
 
     def check_password(self, password):
         """Check the password for the user."""
@@ -195,10 +199,9 @@ class Project(BaseModel):
         db.UniqueConstraint("name", "owner_id", name="uix_project_name_owner"),
     )
 
-    _protected_fields = BaseModel._protected_fields.append(["owner_id"])
+    _protected_fields = BaseModel._protected_fields + ["owner_id"]
 
-    @classmethod
-    def remove_todo(cls, instance, todo_id):
+    def remove_todo(self, todo_id):
         """Remove a todo from the project."""
         todo = Todo.get_by_id(todo_id)
         if not todo:
@@ -206,8 +209,7 @@ class Project(BaseModel):
         todo.soft_delete()
         return todo
 
-    @classmethod
-    def remove_note(cls, instance, note_id):
+    def remove_note(self, note_id):
         """Remove a note from the project."""
         note = Note.get_by_id(note_id)
         if not note:
@@ -258,7 +260,7 @@ class Todo(BaseModel):
         index=True,
     )
 
-    _protected_fields = BaseModel._protected_fields.append(["project_id", "owner_id"])
+    _protected_fields = BaseModel._protected_fields + ["project_id", "owner_id"]
 
     is_completed = db.Column(db.Boolean, default=False, index=True)
     _completed_at = db.Column(db.DateTime)
@@ -284,6 +286,11 @@ class Todo(BaseModel):
     def has_description(self):
         """Check if this todo has a non-empty description."""
         return bool(self.description and self.description.strip())
+
+    @property
+    def status(self):
+        """Check if this todo is completed."""
+        return "completed" if self.is_completed else "incomplete"
 
 
 # todo model with X amount of repetitions like you need to do it 3 times
@@ -327,7 +334,10 @@ class Note(BaseModel):
         index=True,
     )
 
-    _protected_fields = BaseModel._protected_fields.append(["project_id", "owner_id"])
+    _protected_fields = BaseModel._protected_fields + [
+        "project_id",
+        "owner_id",
+    ]
 
     # Relationships
     project = db.relationship("Project", back_populates="notes", passive_deletes=True)
@@ -361,12 +371,12 @@ class TimeLine(BaseModel):
         index=True,
     )
     segments = db.relationship(
-        "Segment", back_populates="time_lines", passive_deletes=True
+        "Segment", back_populates="timelines", passive_deletes=True
     )
 
     # Relationships
-    todos = db.relationship("Todo", back_populates="time_lines", passive_deletes=True)
-    notes = db.relationship("Note", back_populates="time_lines", passive_deletes=True)
+    todos = db.relationship("Todo", back_populates="timelines", passive_deletes=True)
+    notes = db.relationship("Note", back_populates="timelines", passive_deletes=True)
 
 
 # TODO: Make a segment model that can be used to organize todos and notes inside of a timeline.
@@ -404,15 +414,8 @@ class License(BaseModel):
     # Relationships
     users = db.relationship("User", back_populates="license")
 
-    # Add check constraints
-    __table_args__ = (
-        db.CheckConstraint("price >= 0", name="check_price_positive"),
-        db.CheckConstraint("max_projects >= 0", name="check_max_projects_positive"),
-        db.CheckConstraint("max_notes >= 0", name="check_max_notes_positive"),
-        db.CheckConstraint("max_todos >= 0", name="check_max_todos_positive"),
-    )
 
-
+# this was for inviting people to the Moji but can be used to invite to a link
 class InviteLink(BaseModel):
     __tablename__ = "invite_links"
     link = db.Column(db.String(128), nullable=False, unique=True)
@@ -430,12 +433,19 @@ class InviteLink(BaseModel):
         index=True,
     )
 
-    _protected_fields = BaseModel._protected_fields.append(
-        ["owner_id", "is_active", "link"]
-    )
+    _protected_fields = BaseModel._protected_fields + [
+        "owner_id",
+        "is_active",
+        "link",
+    ]
 
     # Relationships
     redeemer = db.relationship(
         "User", foreign_keys=[redeemer_id], backref="received_invites"
     )
     owner = db.relationship("User", foreign_keys=[owner_id], backref="created_invites")
+
+    @classmethod
+    def validate_invite(cls, link):
+        """Validate an invite link."""
+        return True if cls.get_by_field("link", link) else False

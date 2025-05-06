@@ -1,6 +1,6 @@
 from flask import Blueprint, redirect, render_template, request, session, url_for
 
-from models import User, db
+from models import User
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -10,12 +10,14 @@ def register():
     if request.method == "GET":
         return render_template("auth/register.html")
     data = request.get_json()
-    existing_user = User.query.filter_by(email=data.get("email")).first()
-    if existing_user:
-        return redirect(url_for("login"))
-    db.session.add(existing_user)
-    db.session.commit()
-    session["user_id"] = existing_user.id
+    if User.get_by_field("email", data.get("email")):
+        return redirect(url_for("auth.login"))
+    try:
+        user = User.create(data)
+    except Exception as e:
+        print(e)
+        return redirect(url_for("auth.register"))
+    session["user_id"] = user.id
     return redirect(url_for("index"))
 
 
@@ -26,7 +28,7 @@ def login():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
-    user = User.query.filter_by(email=email).first()
+    user = User.get_by_field("email", email)
     if not user or not user.check_password(password):
         return redirect(url_for("auth.login"))
 
