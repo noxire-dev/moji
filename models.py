@@ -23,6 +23,7 @@ class BaseModel(db.Model):
         nullable=False,
     )
     is_deleted = db.Column(db.Boolean, default=False, index=True)
+    _when_deleted = db.Column(db.DateTime, nullable=True)
     _protected_fields = ["id", "created_at", "updated_at"]
 
     def save(self):
@@ -50,6 +51,13 @@ class BaseModel(db.Model):
         self.is_deleted = True
         self.save()
         return self
+
+    @classmethod
+    def create(cls, **kwargs):
+        """Create a new instance of the model with the given attributes."""
+        instance = cls(**kwargs)
+        instance.save()
+        return instance
 
     @classmethod
     def restore(cls, instance):
@@ -143,6 +151,22 @@ class User(BaseModel):
             raise ValueError("Invalid password")
         self.email = email
         return self
+
+    @classmethod
+    def create(cls, **kwargs):
+        """Create a new user with password hashing."""
+        # Extract password from kwargs before creating instance
+        password = kwargs.pop("password", None)
+
+        # Call the parent class's create method
+        instance = super().create(**kwargs)
+
+        # Set password if provided
+        if password:
+            instance.set_password(password)
+            instance.save()
+
+        return instance
 
     # Relationships
     projects = db.relationship(
