@@ -49,6 +49,7 @@ class BaseModel(db.Model):
     def soft_delete(self):
         """Soft delete the model from the database."""
         self.is_deleted = True
+        self._when_deleted = datetime.now(UTC)
         self.save()
         return self
 
