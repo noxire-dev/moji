@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, render_template, request, session, url_for
+from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 
 from models import User
 
@@ -11,6 +11,7 @@ def register():
         return render_template("auth/register.html")
     data = request.get_json()
     if User.get_by_field("email", data.get("email")):
+        flash("User already exists", "error")
         return redirect(url_for("auth.login"))
     try:
         user = User.create(data)
@@ -30,6 +31,7 @@ def login():
     password = data.get("password")
     user = User.get_by_field("email", email)
     if not user or not user.check_password(password):
+        flash("Invalid email or password", "error")
         return redirect(url_for("auth.login"))
 
     session["user_id"] = user.id
