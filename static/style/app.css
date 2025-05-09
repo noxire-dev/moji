@@ -1,0 +1,404 @@
+/* App Layout */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg);
+    color: var(--fg);
+}
+
+/* Header */
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--card-bg);
+    background-color: var(--bg);
+    z-index: 100;
+}
+
+.header-left,
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.project-selector .form-select {
+    background-color: var(--card-bg);
+    color: var(--fg);
+    border: 1px solid var(--accent1);
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+    width: auto;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.project-selector .form-select:focus {
+    box-shadow: 0 0 0 0.25rem var(--cta-shadow);
+    border-color: var(--primary);
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    color: var(--fg);
+    padding: 0.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-icon:hover {
+    background-color: var(--card-bg);
+    color: var(--primary);
+}
+
+.new-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: var(--card-bg);
+    color: var(--fg);
+    border: 1px solid var(--accent1);
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+    transition: all 0.3s ease;
+}
+
+.new-btn:hover {
+    background-color: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    transform: translateY(-1px);
+}
+
+/* Main Content */
+.app-main {
+    display: grid;
+    grid-template-columns: 1fr 1fr 300px;
+    flex: 1;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--card-bg);
+}
+
+.section-header h2 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--primary);
+}
+
+.collapse-btn {
+    transform: rotate(0);
+    transition: transform 0.3s ease;
+}
+
+.collapse-btn.collapsed {
+    transform: rotate(-90deg);
+}
+
+/* Todos Section */
+.todos-section {
+    border-right: 1px solid var(--card-bg);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.todos-list {
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.todo-item {
+    margin-bottom: 0.75rem;
+}
+
+.todo-item .custom-checkbox-wrapper {
+    background-color: var(--card-bg);
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.todo-item .custom-checkbox-wrapper:hover {
+    border-color: var(--accent1);
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+/* Notes Section */
+.notes-section {
+    border-right: 1px solid var(--card-bg);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.notes-list {
+    padding: 1rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    overflow-y: auto;
+}
+
+.note-card {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.note-card:hover {
+    border-color: var(--accent1);
+    box-shadow: 0 2px 8px var(--shadow);
+    transform: translateY(-2px);
+}
+
+.note-card h3 {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    color: var(--fg);
+}
+
+.note-preview {
+    font-size: 0.85rem;
+    color: var(--subtle);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Projects Panel */
+.projects-panel {
+    background-color: var(--bg);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.projects-list {
+    padding: 1rem;
+}
+
+.project-item {
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.project-item:hover {
+    background-color: var(--card-bg);
+}
+
+.project-item.active {
+    background-color: var(--card-bg);
+    border-left: 3px solid var(--primary);
+}
+
+.project-name {
+    font-size: 0.9rem;
+    color: var(--fg);
+}
+
+.add-project {
+    color: var(--muted);
+}
+
+.add-project:hover {
+    color: var(--primary);
+}
+
+/* Command Bar */
+.command-bar {
+    border-top: 1px solid var(--card-bg);
+    padding: 1rem 1.5rem;
+    position: relative;
+}
+
+.command-suggestions {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--card-bg);
+    border-top: 1px solid var(--accent1);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;
+    z-index: 10;
+}
+
+.command-suggestion {
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.command-suggestion:hover {
+    background-color: var(--bg);
+}
+
+.command-help {
+    padding: 1rem 1.5rem;
+}
+
+.command-help h3 {
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    color: var(--primary);
+}
+
+.command-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.command-item {
+    font-size: 0.9rem;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+#command-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--accent1);
+    background-color: var(--card-bg);
+    color: var(--fg);
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+#command-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.25rem var(--cta-shadow);
+    border-color: var(--primary);
+}
+
+#command-input::placeholder {
+    color: var(--muted);
+}
+
+/* Modal Customization */
+.modal-content {
+    background-color: var(--bg);
+    border: 1px solid var(--accent1);
+    border-radius: 12px;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--card-bg);
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-title {
+    color: var(--fg);
+    font-weight: 600;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--card-bg);
+    padding: 1.25rem 1.5rem;
+}
+
+.btn-secondary {
+    background-color: var(--card-bg);
+    color: var(--fg);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background-color: var(--muted);
+    color: var(--bg);
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+    .app-main {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .projects-panel {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .app-main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    .todos-section {
+        border-right: none;
+        border-bottom: 1px solid var(--card-bg);
+    }
+
+    .notes-section {
+        border-right: none;
+    }
+
+    .header-left {
+        flex: 1;
+    }
+
+    .logo {
+        font-size: 1.25rem;
+    }
+}
+
+/* Override footer for app view */
+.footer {
+    display: none;
+}
+
+/* Animation for command suggestions */
+@keyframes slideUp {
+    from {
+        transform: translateY(10px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.command-suggestions {
+    animation: slideUp 0.2s ease-out;
+}
