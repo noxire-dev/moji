@@ -9,17 +9,28 @@ auth_bp = Blueprint("auth", __name__)
 def register():
     if request.method == "GET":
         return render_template("auth/register.html")
-    data = request.get_json()
-    if User.get_by_field("email", data.get("email")):
-        flash("User already exists", "error")
-        return redirect(url_for("auth.login"))
-    try:
-        user = User.create(data)
-    except Exception as e:
-        print(e)
-        return redirect(url_for("auth.register"))
-    session["user_id"] = user.id
-    return redirect(url_for("index"))
+    if request.method == "POST":
+        data = request.form
+        print(data)
+        print(data.get("email"))
+        print(data.get("username"))
+        print(data.get("password"))
+        cluster_data = {
+            "email": data.get("email"),
+            "username": data.get("username"),
+            "password": data.get("password"),
+        }
+        if User.get_by_field("email", data.get("email")):
+            flash("User already exists", "error")
+            return redirect(url_for("auth.register"))
+        try:
+            user = User.create(**cluster_data)
+        except Exception as e:
+            print(e)
+            flash("Something went wrong", "error")
+            return redirect(url_for("auth.register"))
+        session["user_id"] = user.id
+        return redirect(url_for("index"))
 
 
 @auth_bp.route("/login", methods=["POST", "GET"])

@@ -57,7 +57,6 @@ class BaseModel(db.Model):
     def create(cls, **kwargs):
         """Create a new instance of the model with the given attributes."""
         instance = cls(**kwargs)
-        instance.save()
         return instance
 
     @classmethod
@@ -141,10 +140,10 @@ class User(BaseModel):
         """Check the password for the user."""
         return bcrypt.check_password_hash(self._password_hash, password)
 
-    def set_password(self, password):
+    @classmethod
+    def set_password(cls, password):
         """Set the password for the user."""
-        self._password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
-        return self
+        return bcrypt.generate_password_hash(password).decode("utf-8")
 
     def change_email(self, email, password):
         """Change the email for the user."""
@@ -158,14 +157,17 @@ class User(BaseModel):
         """Create a new user with password hashing."""
         # Extract password from kwargs before creating instance
         password = kwargs.pop("password", None)
+        display_name = kwargs.get("username", None)
 
         # Call the parent class's create method
         instance = super().create(**kwargs)
 
-        # Set password if provided
         if password:
-            instance.set_password(password)
-            instance.save()
+            hashed_password = User.set_password(password)
+            instance._password_hash = hashed_password
+
+        instance.display_name = display_name
+        instance.save()
 
         return instance
 
@@ -284,6 +286,12 @@ class Todo(BaseModel):
         nullable=False,
         index=True,
     )
+    tag_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tags.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     _protected_fields = BaseModel._protected_fields + ["project_id", "owner_id"]
 
@@ -293,6 +301,7 @@ class Todo(BaseModel):
     # Relationships
     project = db.relationship("Project", back_populates="todos", passive_deletes=True)
     user = db.relationship("User", back_populates="todos", passive_deletes=True)
+    tags = db.relationship("Tag", back_populates="todos", passive_deletes=True)
 
     def mark_completed(self):
         """Mark a todo as completed."""
@@ -358,6 +367,12 @@ class Note(BaseModel):
         nullable=False,
         index=True,
     )
+    tag_id = db.Column(
+        db.Integer,
+        db.ForeignKey("tags.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     _protected_fields = BaseModel._protected_fields + [
         "project_id",
@@ -367,6 +382,7 @@ class Note(BaseModel):
     # Relationships
     project = db.relationship("Project", back_populates="notes", passive_deletes=True)
     user = db.relationship("User", back_populates="notes", passive_deletes=True)
+    tags = db.relationship("Tag", back_populates="notes", passive_deletes=True)
 
 
 # basic tag system for organizing thinking of doing a class or segment system or a timeline event hopefully
@@ -383,46 +399,46 @@ class Tag(BaseModel):
 
 
 # TODO: Make a time line model that can be used to organize todos and notes inside of a project.
-class TimeLine(BaseModel):
-    """TimeLine model for organizing todos and notes inside of a project."""
+# class TimeLine(BaseModel):
+#     """TimeLine model for organizing todos and notes inside of a project."""
 
-    __tablename__ = "time_lines"
-    name = db.Column(db.String(64), nullable=False, index=True)
-    color = db.Column(db.String(64), nullable=False, index=True)
-    project_id = db.Column(
-        db.Integer,
-        db.ForeignKey("projects.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    segments = db.relationship(
-        "Segment", back_populates="timelines", passive_deletes=True
-    )
+#     __tablename__ = "time_lines"
+#     name = db.Column(db.String(64), nullable=False, index=True)
+#     color = db.Column(db.String(64), nullable=False, index=True)
+#     project_id = db.Column(
+#         db.Integer,
+#         db.ForeignKey("projects.id", ondelete="CASCADE"),
+#         nullable=False,
+#         index=True,
+#     )
+#     segments = db.relationship(
+#         "Segment", back_populates="timeline", passive_deletes=True
+#     )
 
-    # Relationships
-    todos = db.relationship("Todo", back_populates="timelines", passive_deletes=True)
-    notes = db.relationship("Note", back_populates="timelines", passive_deletes=True)
+#     # Relationships
+#     todos = db.relationship("Todo", back_populates="timelines", passive_deletes=True)
+#     notes = db.relationship("Note", back_populates="timelines", passive_deletes=True)
 
 
-# TODO: Make a segment model that can be used to organize todos and notes inside of a timeline.
-class Segment(BaseModel):
-    """Segment model for organizing todos and notes inside of a time line."""
+# TODO: Make a segment model that can be used to organize todos and notes inside of a time line.
+# class Segment(BaseModel):
+#     """Segment model for organizing todos and notes inside of a time line."""
 
-    __tablename__ = "segments"
-    name = db.Column(db.String(64), nullable=False, index=True)
-    context = db.Column(db.String(64), nullable=False, index=True)
-    color = db.Column(db.String(64), nullable=False, index=True)
-    time_line_id = db.Column(
-        db.Integer,
-        db.ForeignKey("time_lines.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    todos = db.relationship("Todo", back_populates="segments", passive_deletes=True)
-    notes = db.relationship("Note", back_populates="segments", passive_deletes=True)
-    timeline = db.relationship(
-        "TimeLine", back_populates="segments", passive_deletes=True
-    )
+#     __tablename__ = "segments"
+#     name = db.Column(db.String(64), nullable=False, index=True)
+#     context = db.Column(db.String(64), nullable=False, index=True)
+#     color = db.Column(db.String(64), nullable=False, index=True)
+#     time_line_id = db.Column(
+#         db.Integer,
+#         db.ForeignKey("time_lines.id", ondelete="CASCADE"),
+#         nullable=False,
+#         index=True,
+#     )
+#     todos = db.relationship("Todo", back_populates="segments", passive_deletes=True)
+#     notes = db.relationship("Note", back_populates="segments", passive_deletes=True)
+#     timeline = db.relationship(
+#         "TimeLine", back_populates="segments", passive_deletes=True
+#     )
 
 
 ## Rather than a sub-model I want to test a license model first

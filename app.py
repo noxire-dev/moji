@@ -1,13 +1,22 @@
 import os
 
 from flask import Flask, render_template
+from flask_migrate import Migrate
 
 from routes.auth import auth_bp
+from models import db
 
 app = Flask(__name__)
 
 app.secret_key = os.urandom(24)
 
+# Configure SQLAlchemy
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+
+# Initialize extensions
+db.init_app(app)
+migrate = Migrate(app, db)
 
 app.register_blueprint(auth_bp)
 

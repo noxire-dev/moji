@@ -47,6 +47,13 @@ venv.bak/
 *.sqlite3
 *.sqlite
 
+# Migrations
+migrations/
+migrations/versions/
+*.pyc
+alembic.ini
+alembic/
+
 # Logs
 *.log
 logs/
