@@ -87,6 +87,11 @@ class BaseModel(db.Model):
         return db.session.query(cls).filter_by(**kwargs).all()
 
     @classmethod
+    def get_all_filter(cls, **kwargs):
+        """Get all models by multiple fields."""
+        return db.session.query(cls).filter_by(**kwargs).all()
+
+    @classmethod
     def get_by_fields_or_404(cls, **kwargs):
         """Get a model by multiple fields or raise a 404 error."""
         return db.session.query(cls).filter_by(**kwargs).first_or_404()
@@ -110,10 +115,9 @@ class BaseModel(db.Model):
         return instance.save()
 
 
-class User(BaseModel):
-    """User model for authentication and ownership."""
+class PidMixIn:
+    """Mixin for models that have a public id."""
 
-    __tablename__ = "users"
     public_id = db.Column(
         db.String(128),
         default=lambda: secrets.token_urlsafe(16),
@@ -121,6 +125,17 @@ class User(BaseModel):
         unique=True,
         index=True,
     )
+
+    @classmethod
+    def get_by_public_id(cls, public_id, get_deleted=False):
+        """Get a model by its public ID."""
+        return cls.query.filter_by(public_id=public_id, is_deleted=get_deleted).first()
+
+
+class User(BaseModel, PidMixIn):
+    """User model for authentication and ownership."""
+
+    __tablename__ = "users"
     username = db.Column(db.String(64), nullable=False, unique=True, index=True)
     display_name = db.Column(db.String(64), nullable=False)
     email = db.Column(db.String(128), unique=True, nullable=False, index=True)
@@ -152,6 +167,19 @@ class User(BaseModel):
         self._last_login = datetime.now(UTC)
         self.save()
         return self
+
+    def get_user_dict(self):
+        """Get the user as a json object."""
+        user_dict = self.to_dict()
+        user_dict.pop("hashed_password")
+        user_dict.pop("id")
+        user_dict.pop("created_at")
+        user_dict.pop("updated_at")
+        user_dict.pop("is_deleted")
+        user_dict.pop("_when_deleted")
+        user_dict.pop("_login_attempts")
+        user_dict.pop("_last_login")
+        return user_dict
 
     @classmethod
     def set_password(cls, password):
@@ -206,10 +234,17 @@ class User(BaseModel):
     license = db.relationship("License", back_populates="users")
 
 
-class Project(BaseModel):
+class Project(BaseModel, PidMixIn):
     """Project model for organizing todos and notes."""
 
     __tablename__ = "projects"
+    public_id = db.Column(
+        db.String(128),
+        default=lambda: secrets.token_urlsafe(16),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
     name = db.Column(db.String(64), nullable=False, index=True)
     description = db.Column(db.Text, nullable=True)
     owner_id = db.Column(
@@ -277,7 +312,6 @@ class Project(BaseModel):
             owner_id=self.owner_id,
         )
         note.save()
-        return note
 
 
 class Todo(BaseModel):

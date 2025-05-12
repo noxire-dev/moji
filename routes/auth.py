@@ -55,6 +55,7 @@ def login():
     session["display_name"] = user.display_name
     session["username"] = user.username
     user.successful_login()
+    flash(f"Login successful {session['username']}", "success")
     return redirect(url_for("index"))
 
 
