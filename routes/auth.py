@@ -30,6 +30,10 @@ def register():
             flash("Something went wrong", "error")
             return redirect(url_for("auth.register"))
         session["user_id"] = user.id
+        session["user_public_id"] = user.public_id
+        session["display_name"] = user.display_name
+        session["username"] = user.username
+        user.successful_login()
         return redirect(url_for("index"))
 
 
@@ -37,18 +41,20 @@ def register():
 def login():
     if request.method == "GET":
         return render_template("auth/login.html")
-    data = request.get_json()
+    data = request.form
     email = data.get("email")
     password = data.get("password")
     user = User.get_by_field("email", email)
     if not user or not user.check_password(password):
         flash("Invalid email or password", "error")
+        user.failed_login()
         return redirect(url_for("auth.login"))
 
     session["user_id"] = user.id
+    session["user_public_id"] = user.public_id
     session["display_name"] = user.display_name
-    session["handler_name"] = user.handler_name
-    session["license"] = user.license
+    session["username"] = user.username
+    user.successful_login()
     return redirect(url_for("index"))
 
 

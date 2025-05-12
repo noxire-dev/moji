@@ -140,6 +140,19 @@ class User(BaseModel):
         """Check the password for the user."""
         return bcrypt.check_password_hash(self._password_hash, password)
 
+    def failed_login(self):
+        """Increment the failed login count for the user."""
+        self._login_attempts += 1
+        self.save()
+        return self
+
+    def successful_login(self):
+        """Reset the failed login count for the user."""
+        self._login_attempts = 0
+        self._last_login = datetime.now(UTC)
+        self.save()
+        return self
+
     @classmethod
     def set_password(cls, password):
         """Set the password for the user."""
