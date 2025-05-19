@@ -31,3 +31,14 @@ def get_user_from_pid(p_id):
         flash("User not found", "error")
         return jsonify({"error": "User not found"}), 404
     return jsonify(user.get_user_dict())
+
+
+@api_bp.route("/v1/user-projects/<string:p_id>", method=["GET"])
+def projects_of_user(p_id):
+    user = User.get_by_field("public_id", p_id)
+    if not user:
+        flash("User not found!", "error")
+        return jsonify({"error": "User not found"}), 404
+
+    cleaned_prjects = user.projects
+    cleaned_prjects.pop("owner_id")

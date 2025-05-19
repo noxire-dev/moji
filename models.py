@@ -253,6 +253,12 @@ class Project(BaseModel, PidMixIn):
         nullable=False,
         index=True,
     )
+    owner_p_id = db.Column(
+        db.String(128),
+        db.ForeignKey("user.public_id", ondelet="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     # Relationships
     user = db.relationship("User", back_populates="projects")
