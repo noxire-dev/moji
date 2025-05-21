@@ -1,5 +1,6 @@
-from flask import Blueprint, request, jsonify, flash
-from models import User, Todo, Project, Note
+from flask import Blueprint, flash, jsonify, request, session
+
+from models import Note, Project, Todo, User
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -40,5 +41,26 @@ def projects_of_user(p_id):
         flash("User not found!", "error")
         return jsonify({"error": "User not found"}), 404
 
-    cleaned_prjects = user.projects
-    cleaned_prjects.pop("owner_id")
+    cleaned_projects = user.projects
+    for project in cleaned_projects:
+        project.pop("owner_id")
+    return jsonify(cleaned_projects)
+
+
+@api_bp.route("/v1/create-project", method=["POST"])
+def create_project():
+    data = request.json
+    if not data:
+        flash("No data provided", "error")
+        return jsonify({"error": "No data provided"}), 400
+    if not data.get("name"):
+        flash("Name is required", "error")
+        return jsonify({"error": "Name is required"}), 400
+    name = data.get("name")
+    description = data.get("description")
+    owner_id = session.get("user_id")
+    owner_p_id = session.get("user_p_id")
+    Project.create(
+        name=name, description=description, owner_id=owner_id, owner_p_id=owner_p_id
+    )
+    return jsonify({"message": "Project created successfully"}), 201

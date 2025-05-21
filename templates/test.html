@@ -205,7 +205,7 @@
   function adjustInputHeight() {
     // Reset height to auto first to shrink if needed
     commandInput.style.height = 'auto';
-    
+
     // Calculate the right height (between min and max height)
     const newHeight = Math.min(Math.max(commandInput.scrollHeight, 48), 150);
     commandInput.style.height = newHeight + 'px';
@@ -228,14 +228,14 @@
   // Show appropriate suggestions based on input
   commandInput.addEventListener('input', function() {
     const input = this.value.toLowerCase();
-    
+
     if (input.startsWith('/')) {
-      const matchingCommands = commands.filter(cmd => 
+      const matchingCommands = commands.filter(cmd =>
         cmd.command.startsWith(input)
       );
-      
+
       if (matchingCommands.length > 0) {
-        commandSuggestions.innerHTML = matchingCommands.map(cmd => 
+        commandSuggestions.innerHTML = matchingCommands.map(cmd =>
           `<div class="command-suggestion">${cmd.command} - ${cmd.description}</div>`
         ).join('');
         commandSuggestions.style.display = 'block';
@@ -255,12 +255,21 @@
     }
   });
 
+  commandInput.addEventListener('keydown', function(e) {
+    if (e.keyCode === 9) {
+      e.preventDefault();
+      commandSuggestions.innerHTML = '';
+      console.log('Tab pressed');
+      commandInput.value = '';
+    }
+  });
+
   // Function to process the command
   function processCommand() {
     const input = commandInput.value.trim();
-    
+
     if (!input) return;
-    
+
     if (input.startsWith('/todo ')) {
       // Add todo logic
       const todoText = input.slice(6);
@@ -280,7 +289,7 @@
       addNote(input);
       commandInput.value = '';
     }
-    
+
     // Reset height and hide suggestions
     adjustInputHeight();
     commandSuggestions.style.display = 'none';
@@ -290,7 +299,7 @@
   function addTodo(text) {
     const todosList = document.querySelector('.todos-list');
     const todoId = 'todo' + (todosList.children.length + 1);
-    
+
     const todoItem = document.createElement('div');
     todoItem.className = 'todo-item';
     todoItem.innerHTML = `
@@ -301,7 +310,7 @@
         </label>
       </div>
     `;
-    
+
     todosList.appendChild(todoItem);
   }
 
@@ -309,7 +318,7 @@
   function addNote(text) {
     const notesList = document.querySelector('.notes-list');
     const noteId = notesList.children.length + 1;
-    
+
     const noteCard = document.createElement('div');
     noteCard.className = 'note-card';
     noteCard.setAttribute('data-id', noteId);
@@ -317,7 +326,7 @@
       <h3>New Note</h3>
       <div class="note-preview">${text.slice(0, 50)}${text.length > 50 ? '...' : ''}</div>
     `;
-    
+
     notesList.appendChild(noteCard);
   }
 
@@ -354,7 +363,7 @@
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded');
     console.log('Note cards found:', noteCards.length);
-    
+
     try {
       noteModal = new bootstrap.Modal(document.getElementById('noteModal'));
       projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
@@ -362,20 +371,20 @@
     } catch (error) {
       console.error('Error initializing modal:', error);
     }
-    
+
     noteCards.forEach(card => {
       card.addEventListener('click', function() {
         console.log('Note card clicked');
         const noteId = this.getAttribute('data-id');
         const noteTitle = this.querySelector('h3').textContent;
         console.log('Note ID:', noteId, 'Title:', noteTitle);
-        
+
         document.getElementById('noteModalLabel').textContent = noteTitle;
         document.getElementById('note-title').value = noteTitle;
-        
+
         // In a real app, you'd fetch the full note content
         document.getElementById('note-content').value = 'This is the full content of note #' + noteId;
-        
+
         try {
           noteModal.show();
           console.log('Modal show called');
@@ -421,7 +430,7 @@
   // Project selection
   document.getElementById('project-select').addEventListener('change', function() {
     const projectName = this.value;
-    
+
     // Update active project in sidebar
     const projectItems = document.querySelectorAll('.project-item');
     projectItems.forEach(item => {
@@ -432,7 +441,7 @@
         item.classList.remove('active');
       }
     });
-    
+
     // In a real app, you'd load the todos and notes for the selected project
     alert(`Switched to ${projectName} project`);
   });
@@ -443,14 +452,14 @@
     if (!item.classList.contains('add-project')) {
       item.addEventListener('click', function() {
         const projectName = this.querySelector('.project-name').textContent;
-        
+
         // Update dropdown
         document.getElementById('project-select').value = projectName.toLowerCase();
-        
+
         // Update active state
         projectItems.forEach(p => p.classList.remove('active'));
         this.classList.add('active');
-        
+
         // In a real app, you'd load the todos and notes for the selected project
         alert(`Switched to ${projectName} project`);
       });

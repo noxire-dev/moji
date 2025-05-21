@@ -151,6 +151,33 @@ class User(BaseModel, PidMixIn):
         "email",
     ]
 
+    # Relationships
+    projects = db.relationship(
+        "Project",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    todos = db.relationship(
+        "Todo",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    notes = db.relationship(
+        "Note",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    tags = db.relationship(
+        "Tag",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    license = db.relationship("License", back_populates="users")
+
     def check_password(self, password):
         """Check the password for the user."""
         return bcrypt.check_password_hash(self._password_hash, password)
@@ -180,6 +207,11 @@ class User(BaseModel, PidMixIn):
         user_dict.pop("_login_attempts")
         user_dict.pop("_last_login")
         return user_dict
+
+    @classmethod
+    def swap_id_for_public_id(cls, id):
+        """Swap the id for the public id."""
+        return cls.get_by_id(id).public_id
 
     @classmethod
     def set_password(cls, password):
@@ -218,7 +250,6 @@ class User(BaseModel, PidMixIn):
         back_populates="user",
         cascade="all, delete-orphan",
         passive_deletes=True,
-        foreign_keys="[Project.owner_id]",
     )
     todos = db.relationship(
         "Todo",
@@ -239,13 +270,6 @@ class Project(BaseModel, PidMixIn):
     """Project model for organizing todos and notes."""
 
     __tablename__ = "projects"
-    public_id = db.Column(
-        db.String(128),
-        default=lambda: secrets.token_urlsafe(16),
-        nullable=False,
-        unique=True,
-        index=True,
-    )
     name = db.Column(db.String(64), nullable=False, index=True)
     description = db.Column(db.Text, nullable=True)
     owner_id = db.Column(
@@ -256,13 +280,13 @@ class Project(BaseModel, PidMixIn):
     )
     owner_p_id = db.Column(
         db.String(128),
-        db.ForeignKey("users.public_id", ondelete="CASCADE"),
+        db.ForeignKey("user.public_id", ondelet="CASCADE"),
         nullable=False,
         index=True,
     )
 
     # Relationships
-    user = db.relationship("User", back_populates="projects", foreign_keys=[owner_id])
+    user = db.relationship("User", back_populates="projects")
     todos = db.relationship(
         "Todo",
         back_populates="project",
@@ -319,6 +343,7 @@ class Project(BaseModel, PidMixIn):
             owner_id=self.owner_id,
         )
         note.save()
+        return note
 
 
 class Todo(BaseModel):
@@ -330,19 +355,19 @@ class Todo(BaseModel):
     due_date = db.Column(db.DateTime, nullable=True, index=True)
     project_id = db.Column(
         db.Integer,
-        db.ForeignKey("projects.id", ondelete="CASCADE"),
+        db.ForeignKey("projects.id", ondelete="CASCADE", name="fk_todo_project"),
         nullable=False,
         index=True,
     )
     owner_id = db.Column(
         db.Integer,
-        db.ForeignKey("users.id", ondelete="CASCADE"),
+        db.ForeignKey("users.id", ondelete="CASCADE", name="fk_todo_owner"),
         nullable=False,
         index=True,
     )
     tag_id = db.Column(
         db.Integer,
-        db.ForeignKey("tags.id", ondelete="SET NULL"),
+        db.ForeignKey("tags.id", ondelete="SET NULL", name="fk_todo_tag"),
         nullable=True,
         index=True,
     )
@@ -353,9 +378,11 @@ class Todo(BaseModel):
     _completed_at = db.Column(db.DateTime)
 
     # Relationships
-    project = db.relationship("Project", back_populates="todos", passive_deletes=True)
-    user = db.relationship("User", back_populates="todos", passive_deletes=True)
-    tags = db.relationship("Tag", back_populates="todos", passive_deletes=True)
+    project = db.relationship(
+        "Project", back_populates="todos", foreign_keys=[project_id]
+    )
+    user = db.relationship("User", back_populates="todos", foreign_keys=[owner_id])
+    tag = db.relationship("Tag", back_populates="todos", foreign_keys=[tag_id])
 
     def mark_completed(self):
         """Mark a todo as completed."""
@@ -411,19 +438,19 @@ class Note(BaseModel):
 
     project_id = db.Column(
         db.Integer,
-        db.ForeignKey("projects.id", ondelete="CASCADE"),
+        db.ForeignKey("projects.id", ondelete="CASCADE", name="fk_note_project"),
         nullable=False,
         index=True,
     )
     owner_id = db.Column(
         db.Integer,
-        db.ForeignKey("users.id", ondelete="CASCADE"),
+        db.ForeignKey("users.id", ondelete="CASCADE", name="fk_note_owner"),
         nullable=False,
         index=True,
     )
     tag_id = db.Column(
         db.Integer,
-        db.ForeignKey("tags.id", ondelete="SET NULL"),
+        db.ForeignKey("tags.id", ondelete="SET NULL", name="fk_note_tag"),
         nullable=True,
         index=True,
     )
@@ -434,9 +461,11 @@ class Note(BaseModel):
     ]
 
     # Relationships
-    project = db.relationship("Project", back_populates="notes", passive_deletes=True)
-    user = db.relationship("User", back_populates="notes", passive_deletes=True)
-    tags = db.relationship("Tag", back_populates="notes", passive_deletes=True)
+    project = db.relationship(
+        "Project", back_populates="notes", foreign_keys=[project_id]
+    )
+    user = db.relationship("User", back_populates="notes", foreign_keys=[owner_id])
+    tag = db.relationship("Tag", back_populates="notes", foreign_keys=[tag_id])
 
 
 # basic tag system for organizing thinking of doing a class or segment system or a timeline event hopefully
@@ -446,10 +475,22 @@ class Tag(BaseModel):
     __tablename__ = "tags"
     name = db.Column(db.String(64), nullable=False, index=True)
     color = db.Column(db.String(64), nullable=False, index=True)
+    owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("users.id", ondelete="CASCADE", name="fk_tag_owner"),
+        nullable=False,
+        index=True,
+    )
+
+    # Add unique constraint for tag names per user
+    __table_args__ = (
+        db.UniqueConstraint("name", "owner_id", name="uix_tag_name_owner"),
+    )
 
     # Relationships
-    todos = db.relationship("Todo", back_populates="tags", passive_deletes=True)
-    notes = db.relationship("Note", back_populates="tags", passive_deletes=True)
+    todos = db.relationship("Todo", back_populates="tag", passive_deletes=True)
+    notes = db.relationship("Note", back_populates="tag", passive_deletes=True)
+    user = db.relationship("User", back_populates="tags", foreign_keys=[owner_id])
 
 
 # TODO: Make a time line model that can be used to organize todos and notes inside of a project.
