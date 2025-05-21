@@ -175,6 +175,27 @@
   </div>
 </div>
 
+  <!-- Modal for Project Creation -->
+  <div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="projectModalLabel">Create Project</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control mb-3" id="project-name" placeholder="Project Name">
+          <textarea class="form-control" id="project-description" rows="10" placeholder="Project description..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn cta-button" id="add-project">Add Project</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   // Auto-resize textarea as you type
   const commandInput = document.getElementById('command-input');
@@ -328,7 +349,7 @@
   // Note modal handling
   const noteCards = document.querySelectorAll('.note-card');
   let noteModal;
-
+  let projectModal;
   // Initialize modal after DOM is loaded
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded');
@@ -336,6 +357,7 @@
     
     try {
       noteModal = new bootstrap.Modal(document.getElementById('noteModal'));
+      projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
       console.log('Modal initialized successfully');
     } catch (error) {
       console.error('Error initializing modal:', error);
@@ -359,6 +381,17 @@
           console.log('Modal show called');
         } catch (error) {
           console.error('Error showing modal:', error);
+        }
+      });
+    });
+    projectCards.forEach(card => {
+      card.addEventListener('click', function() {
+        const projectName = this.querySelector('.project-name').textContent;
+        const projectDescription = this.querySelector('.project-description').textContent;
+        const projectAdd = this.querySelector('.add-project').textContent;
+        async function addProject() {
+
+        projectModal.show();
         }
       });
     });
@@ -424,7 +457,7 @@
     } else {
       item.addEventListener('click', function() {
         // Show dialog to add a new project
-        alert('Add new project dialog coming soon!');
+        projectModal.show();
       });
     }
   });

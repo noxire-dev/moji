@@ -218,6 +218,7 @@ class User(BaseModel, PidMixIn):
         back_populates="user",
         cascade="all, delete-orphan",
         passive_deletes=True,
+        foreign_keys="[Project.owner_id]",
     )
     todos = db.relationship(
         "Todo",
@@ -255,13 +256,13 @@ class Project(BaseModel, PidMixIn):
     )
     owner_p_id = db.Column(
         db.String(128),
-        db.ForeignKey("user.public_id", ondelet="CASCADE"),
+        db.ForeignKey("users.public_id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )
 
     # Relationships
-    user = db.relationship("User", back_populates="projects")
+    user = db.relationship("User", back_populates="projects", foreign_keys=[owner_id])
     todos = db.relationship(
         "Todo",
         back_populates="project",
