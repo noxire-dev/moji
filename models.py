@@ -280,7 +280,7 @@ class Project(BaseModel, PidMixIn):
     )
     owner_p_id = db.Column(
         db.String(128),
-        db.ForeignKey("user.public_id", ondelet="CASCADE"),
+        db.ForeignKey("user.public_id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )

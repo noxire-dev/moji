@@ -47,17 +47,17 @@ def projects_of_user(p_id):
     return jsonify(cleaned_projects)
 
 
-@api_bp.route("/v1/create-project", method=["POST"])
+@api_bp.route("/v1/projects", method=["POST"])
 def create_project():
-    data = request.json
+    data = request.get_json()
     if not data:
         flash("No data provided", "error")
         return jsonify({"error": "No data provided"}), 400
-    if not data.get("name"):
-        flash("Name is required", "error")
-        return jsonify({"error": "Name is required"}), 400
-    name = data.get("name")
-    description = data.get("description")
+    if not data.get("projectName"):
+        flash("Project name is required", "error")
+        return jsonify({"error": "Project name is required"}), 400
+    name = data.get("projectName")
+    description = data.get("projectDescription")
     owner_id = session.get("user_id")
     owner_p_id = session.get("user_p_id")
     Project.create(

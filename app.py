@@ -3,8 +3,8 @@ import os
 from flask import Flask, render_template
 from flask_migrate import Migrate
 
-from routes.auth import auth_bp
 from models import db
+from routes.auth import auth_bp
 
 app = Flask(__name__)
 
