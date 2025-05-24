@@ -367,7 +367,54 @@
     try {
       noteModal = new bootstrap.Modal(document.getElementById('noteModal'));
       projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
+      let createProjectBtn = document.getElementById('add-project');
       console.log('Modal initialized successfully');
+
+      // Add event listener for create project button
+      createProjectBtn.addEventListener('click', async function() {
+        const projectName = document.getElementById('project-name').value;
+        const projectDescription = document.getElementById('project-description').value;
+        console.log('Project name:', projectName);
+        console.log('Project description:', projectDescription);
+
+        try {
+          const response = await fetch('/api/v1/projects', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ projectName, projectDescription })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            console.log('Project added:', data);
+            // Add the new project to the projects list
+            const projectsList = document.querySelector('.projects-list');
+            const projectItem = document.createElement('div');
+            projectItem.className = 'project-item';
+            projectItem.innerHTML = `
+              <span class="project-name">${projectName}</span>
+            `;
+
+            // Insert before the "Add Project" item
+            const addProjectItem = document.querySelector('.project-item.add-project');
+            projectsList.insertBefore(projectItem, addProjectItem);
+
+            // Clear the form and close the modal
+            document.getElementById('project-name').value = '';
+            document.getElementById('project-description').value = '';
+            projectModal.hide();
+          } else {
+            console.error('Error creating project:', data.message);
+            alert('Error creating project: ' + data.message);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error creating project. Please try again.');
+        }
+      });
     } catch (error) {
       console.error('Error initializing modal:', error);
     }
@@ -393,58 +440,46 @@
         }
       });
     });
-    projectCards.forEach(card => {
-      card.addEventListener('click', function() {
-        const projectName = this.querySelector('.project-name').textContent;
-        const projectDescription = this.querySelector('.project-description').textContent;
-        const projectAdd = this.querySelector('.add-project').textContent;
-        async function addProject() {
 
-        projectModal.show();
+    // Add event listeners for new buttons
+    document.getElementById('new-btn').addEventListener('click', function() {
+      // Show a dropdown or a modal with options to create a new todo, note, or project
+      alert('Create new item: Todo, Note, or Project');
+    });
+
+    document.getElementById('search-btn').addEventListener('click', function() {
+      // Show search interface
+      alert('Search functionality coming soon!');
+    });
+
+    document.getElementById('profile-btn').addEventListener('click', function() {
+      // Show profile or settings
+      alert('User profile and settings coming soon!');
+    });
+
+    document.getElementById('menu-btn').addEventListener('click', function() {
+      // Show main menu or navigation
+      alert('Main menu coming soon!');
+    });
+
+    // Project selection
+    document.getElementById('project-select').addEventListener('change', function() {
+      const projectName = this.value;
+
+      // Update active project in sidebar
+      const projectItems = document.querySelectorAll('.project-item');
+      projectItems.forEach(item => {
+        const name = item.querySelector('.project-name').textContent.toLowerCase();
+        if (name === projectName) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
         }
       });
+
+      // In a real app, you'd load the todos and notes for the selected project
+      alert(`Switched to ${projectName} project`);
     });
-  });
-
-  // Add event listeners for new buttons
-  document.getElementById('new-btn').addEventListener('click', function() {
-    // Show a dropdown or a modal with options to create a new todo, note, or project
-    alert('Create new item: Todo, Note, or Project');
-  });
-
-  document.getElementById('search-btn').addEventListener('click', function() {
-    // Show search interface
-    alert('Search functionality coming soon!');
-  });
-
-  document.getElementById('profile-btn').addEventListener('click', function() {
-    // Show profile or settings
-    alert('User profile and settings coming soon!');
-  });
-
-  document.getElementById('menu-btn').addEventListener('click', function() {
-    // Show main menu or navigation
-    alert('Main menu coming soon!');
-  });
-
-  // Project selection
-  document.getElementById('project-select').addEventListener('change', function() {
-    const projectName = this.value;
-
-    // Update active project in sidebar
-    const projectItems = document.querySelectorAll('.project-item');
-    projectItems.forEach(item => {
-      const name = item.querySelector('.project-name').textContent.toLowerCase();
-      if (name === projectName) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-    });
-
-    // In a real app, you'd load the todos and notes for the selected project
-    alert(`Switched to ${projectName} project`);
-  });
 
   // Project sidebar item click
   const projectItems = document.querySelectorAll('.project-item');
@@ -455,12 +490,12 @@
       item.addEventListener('click', function() {
         const projectName = this.querySelector('.project-name').textContent;
 
-        // Update dropdown
-        document.getElementById('project-select').value = projectName.toLowerCase();
+          // Update dropdown
+          document.getElementById('project-select').value = projectName.toLowerCase();
 
-        // Update active state
-        projectItems.forEach(p => p.classList.remove('active'));
-        this.classList.add('active');
+          // Update active state
+          projectItems.forEach(p => p.classList.remove('active'));
+          this.classList.add('active');
 
         // In a real app, you'd load the todos and notes for the selected project
         alert(`Switched to ${projectName} project`);
@@ -494,9 +529,10 @@
     }
   });
 
-  // Make sure to focus the command input when the page loads
-  window.addEventListener('load', function() {
-    commandInput.focus();
+    // Make sure to focus the command input when the page loads
+    window.addEventListener('load', function() {
+      commandInput.focus();
+    });
   });
 </script>
 {% endblock %}

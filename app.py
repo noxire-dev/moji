@@ -5,7 +5,6 @@ from flask_migrate import Migrate
 
 from routes.api import api_bp
 from routes.auth import auth_bp
-from models import db
 
 app = Flask(__name__)
 

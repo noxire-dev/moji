@@ -49,7 +49,7 @@ def projects_of_user(p_id):
 
 @api_bp.route("/v1/create-project", methods=["POST"])
 def create_project():
-    data = request.json
+    data = request.get_json()
     if not data:
         flash("No data provided", "error")
         return jsonify({"error": "No data provided"}), 400
