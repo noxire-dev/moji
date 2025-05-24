@@ -1,0 +1,506 @@
+/* Notecard Component - Final Design */
+.notecard {
+    background-color: var(--card-bg);
+    border: 1px solid transparent;
+    border-radius: 12px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+}
+
+.notecard:hover {
+    border-color: var(--accent1);
+    box-shadow:
+        0 4px 12px var(--shadow),
+        0 0 0 1px var(--accent1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+}
+
+.notecard:active {
+    transform: translateY(0) scale(0.98);
+    transition: transform 0.1s ease;
+}
+
+.notecard:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--cta-shadow);
+}
+
+/* Notecard Header */
+.notecard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    gap: 0.75rem;
+}
+
+.notecard-title {
+    font-size: 1rem;
+    font-weight: 650;
+    color: var(--fg);
+    margin: 0;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    word-break: break-word;
+    flex: 1;
+    transition: color 0.3s ease;
+}
+
+.notecard-menu {
+    opacity: 0;
+    transition: all 0.3s ease;
+    background: transparent;
+    border: none;
+    color: var(--subtle);
+    padding: 0.375rem;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: translateX(8px);
+}
+
+.notecard:hover .notecard-menu {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notecard-menu:hover {
+    background-color: var(--bg);
+    color: var(--primary);
+    transform: scale(1.1);
+}
+
+.notecard-menu:active {
+    transform: scale(0.9);
+    background-color: var(--primary);
+    color: white;
+}
+
+/* Notecard Content */
+.notecard-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.75rem;
+}
+
+.notecard-preview {
+    font-size: 0.875rem;
+    font-weight: 450;
+    color: var(--subtle);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+    transition: color 0.3s ease;
+}
+
+.notecard-preview:empty {
+    display: none;
+}
+
+.notecard:hover .notecard-preview {
+    color: var(--fg);
+}
+
+/* Notecard Footer */
+.notecard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+    padding-top: 0.75rem;
+    border-top: 1px solid transparent;
+    transition: border-color 0.3s ease;
+}
+
+.notecard:hover .notecard-footer {
+    border-top-color: var(--accent1);
+}
+
+.notecard-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+}
+
+.notecard-date {
+    font-variant-numeric: tabular-nums;
+    transition: color 0.3s ease;
+}
+
+.notecard:hover .notecard-date {
+    color: var(--subtle);
+}
+
+.notecard-tag {
+    background-color: var(--primary);
+    color: white;
+    padding: 0.25rem 0.625rem;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+}
+
+.notecard:hover .notecard-tag {
+    background-color: var(--hover);
+    transform: scale(1.05);
+}
+
+/* Notecard Actions */
+.notecard-actions {
+    display: flex;
+    gap: 0.375rem;
+    opacity: 0;
+    transition: all 0.3s ease;
+    transform: translateX(20px);
+}
+
+.notecard:hover .notecard-actions {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notecard-action {
+    background: transparent;
+    border: none;
+    color: var(--subtle);
+    padding: 0.375rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+}
+
+.notecard-action:hover {
+    background-color: var(--bg);
+    color: var(--primary);
+    transform: scale(1.1);
+}
+
+.notecard-action:active {
+    transform: scale(0.9);
+    background-color: var(--primary);
+    color: white;
+}
+
+.notecard-action.delete:hover {
+    color: var(--accent2);
+    background-color: rgba(195, 64, 67, 0.1);
+}
+
+.notecard-action.delete:active {
+    background-color: var(--accent2);
+    color: white;
+}
+
+.notecard-action:focus {
+    outline: none;
+    background-color: var(--bg);
+    color: var(--primary);
+    box-shadow: 0 0 0 2px var(--cta-shadow);
+}
+
+/* Notecard States */
+.notecard.selected {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--cta-shadow);
+    transform: translateY(-1px);
+}
+
+.notecard.pinned {
+    background: linear-gradient(135deg, var(--card-bg) 0%, var(--primary) 1.5%, var(--card-bg) 2%);
+    border-left: 3px solid var(--primary);
+    position: relative;
+}
+
+.notecard.pinned::after {
+    content: '';
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 6px;
+    height: 6px;
+    background-color: var(--primary);
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--card-bg);
+}
+
+.notecard.recent {
+    border-left: 2px solid var(--accent1);
+}
+
+.notecard.empty {
+    border: 2px dashed var(--accent1);
+    background: linear-gradient(45deg, transparent 49%, var(--accent1) 50%, transparent 51%);
+    background-size: 20px 20px;
+    opacity: 0.4;
+    justify-content: center;
+    align-items: center;
+    min-height: 120px;
+    color: var(--muted);
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.notecard.empty:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--card-bg);
+    opacity: 1;
+    transform: none;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.notecard.empty .notecard-empty-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Loading State */
+.notecard.loading {
+    background: linear-gradient(90deg, var(--card-bg) 25%, var(--bg) 50%, var(--card-bg) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    pointer-events: none;
+}
+
+.notecard.loading * {
+    opacity: 0.3;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Notecard Grid Layout */
+.notecard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+/* Animation for new cards */
+@keyframes notecard-appear {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.notecard.new {
+    animation: notecard-appear 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .notecard-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+
+    .notecard {
+        padding: 1rem;
+        min-height: 120px;
+    }
+
+    .notecard-title {
+        font-size: 0.9rem;
+    }
+
+    .notecard-preview {
+        font-size: 0.8rem;
+        -webkit-line-clamp: 2;
+    }
+
+    .notecard-header {
+        margin-bottom: 0.5rem;
+    }
+
+    .notecard-footer {
+        padding-top: 0.5rem;
+    }
+
+    /* Always show actions on mobile */
+    .notecard-menu,
+    .notecard-actions {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .notecard-action {
+        min-width: 44px;
+        min-height: 44px;
+    }
+}
+
+@media (max-width: 480px) {
+    .notecard-grid {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .notecard {
+        padding: 0.875rem;
+    }
+
+    .notecard-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .notecard {
+        border: 2px solid var(--fg);
+    }
+
+    .notecard:hover {
+        border-color: var(--primary);
+        box-shadow: 0 0 0 2px var(--primary);
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+    .notecard,
+    .notecard-menu,
+    .notecard-actions,
+    .notecard-action {
+        transition: none;
+    }
+
+    .notecard:hover {
+        transform: none;
+    }
+
+    .notecard.new {
+        animation: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .notecard {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    .notecard-menu,
+    .notecard-actions {
+        display: none;
+    }
+}
+
+
+/* Remove the old pin dot */
+.notecard.pinned::after {
+    display: none;
+}
+
+/* Update pinned styling to be more subtle */
+.notecard.pinned {
+    background: var(--card-bg);
+    border-left: 3px solid var(--primary);
+}
+
+/* Pin tag styling */
+.notecard-pin-tag {
+    background-color: var(--primary);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.notecard:hover .notecard-pin-tag {
+    background-color: var(--hover);
+    transform: scale(1.05);
+}
+
+/* Update meta layout to handle both regular tags and pin tags */
+.notecard-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+    flex-wrap: wrap;
+}
+
+.notecard-tags {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+}
+
+/* Regular tag styling (slightly different from pin) */
+.notecard-tag {
+    background-color: var(--accent1);
+    color: var(--bg);
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: all 0.3s ease;
+}
+
+.notecard:hover .notecard-tag {
+    background-color: var(--primary);
+    color: white;
+    transform: scale(1.05);
+}

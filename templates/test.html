@@ -367,26 +367,33 @@
     try {
       noteModal = new bootstrap.Modal(document.getElementById('noteModal'));
       projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
-      let createProjectBtn = document.getElementById('add-project');
       console.log('Modal initialized successfully');
 
-      // Add event listener for create project button
-      createProjectBtn.addEventListener('click', async function() {
-        const projectName = document.getElementById('project-name').value;
-        const projectDescription = document.getElementById('project-description').value;
+      // Add event listener for create project button - SINGLE LISTENER
+      document.getElementById('add-project').addEventListener('click', async function() {
+        const projectName = document.getElementById('project-name').value.trim();
+        const projectDescription = document.getElementById('project-description').value.trim();
+
+        if (!projectName) {
+          alert('Project name is required');
+          return;
+        }
+
         console.log('Project name:', projectName);
         console.log('Project description:', projectDescription);
 
         try {
-          const response = await fetch('/api/v1/projects', {
+          const response = await fetch('/api/v1/create-project', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ projectName, projectDescription })
+            body: JSON.stringify({ name: projectName, description: projectDescription })
           });
 
           const data = await response.json();
+          console.log('Response status:', response.status);
+          console.log('Response data:', data);
 
           if (response.ok) {
             console.log('Project added:', data);
@@ -406,9 +413,11 @@
             document.getElementById('project-name').value = '';
             document.getElementById('project-description').value = '';
             projectModal.hide();
+
+            alert('Project created successfully!');
           } else {
-            console.error('Error creating project:', data.message);
-            alert('Error creating project: ' + data.message);
+            console.error('Error creating project:', data.message || data.error);
+            alert('Error creating project: ' + (data.message || data.error || 'Unknown error'));
           }
         } catch (error) {
           console.error('Error:', error);
@@ -485,7 +494,6 @@
   const projectItems = document.querySelectorAll('.project-item');
 
   projectItems.forEach(item => {
-    const projectModalSaveBtn = document.getElementById('add-project');
     if (!item.classList.contains('add-project')) {
       item.addEventListener('click', function() {
         const projectName = this.querySelector('.project-name').textContent;
@@ -504,27 +512,6 @@
       item.addEventListener('click', function() {
         // Show dialog to add a new project
         projectModal.show();
-        projectModalSaveBtn.addEventListener('click', function() {
-          const projectName = document.getElementById('project-name').value;
-          const projectDescription = document.getElementById('project-description').value;
-          const projectAdd = document.getElementById('add-project').textContent;
-          alert(`Project added: ${projectName}`);
-
-          async function addProject() {
-            const project = {
-              name: projectName,
-              description: projectDescription
-            };
-            fetch('/api/v1/create-project', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(project)
-            });
-            console.log(project);
-          }
-        });
       });
     }
   });

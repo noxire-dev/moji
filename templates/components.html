@@ -1,0 +1,965 @@
+{% extends "base.html" %}
+
+{% block title %}Components - Moji{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="/static/scripts/components/notepad/notepad.css">
+<style>
+  .components-page {
+    min-height: 100vh;
+    background-color: var(--bg);
+    color: var(--fg);
+    transition: all 0.3s ease;
+  }
+
+  /* Enhanced Header */
+  .enhanced-header {
+    background: linear-gradient(135deg, var(--card-bg), var(--bg));
+    border-bottom: 2px solid var(--accent1);
+    padding: 1.5rem 0;
+    margin-bottom: 2rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 20px var(--shadow);
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .header-left {
+    flex: 1;
+  }
+
+  .page-title {
+    font-size: 2.2rem;
+    color: var(--fg);
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--primary), var(--accent1));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .page-subtitle {
+    font-size: 1rem;
+    color: var(--subtle);
+    margin-bottom: 1rem;
+  }
+
+  .page-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Theme Toggle */
+  .theme-controls {
+    display: flex;
+    align-items: center;
+  }
+
+  .theme-toggle {
+    background: var(--card-bg);
+    border: 2px solid var(--accent1);
+    border-radius: 50px;
+    padding: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.3s ease;
+  }
+
+  .theme-option {
+    background: transparent;
+    border: none;
+    border-radius: 50px;
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--subtle);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .theme-option.active {
+    background: linear-gradient(135deg, var(--primary), var(--accent1));
+    color: white;
+    box-shadow: 0 2px 10px var(--cta-shadow);
+  }
+
+  /* Main Layout */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 0;
+    height: calc(100vh - 160px);
+    width: 100vw;
+  }
+
+  /* Component Sidebar */
+  .component-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    background: var(--bg);
+    border-right: 1px solid var(--accent1);
+    padding: 1.5rem 1rem;
+    overflow-y: auto;
+  }
+
+  .sidebar-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.5rem;
+    padding: 0 0.25rem;
+  }
+
+  .component-card {
+    background: var(--card-bg);
+    border: 1px solid var(--accent1);
+    border-radius: 12px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .component-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--shadow);
+  }
+
+  .component-card.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 4px 15px var(--cta-shadow);
+  }
+
+  .component-card.active .component-card-title,
+  .component-card.active .component-card-desc {
+    color: white;
+  }
+
+  .component-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .component-card.disabled:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: var(--accent1);
+  }
+
+  .component-card-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 0.4rem;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .component-card-desc {
+    font-size: 0.75rem;
+    color: var(--subtle);
+    line-height: 1.3;
+  }
+
+  .component-badge {
+    background: var(--accent1);
+    color: white;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 6px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+  }
+
+  .component-card.active .component-badge {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  /* Central Render Area */
+  .render-area {
+    background: var(--card-bg);
+    border: 1px solid var(--accent1);
+    border-radius: 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+    position: relative;
+    overflow: hidden;
+    margin: 1.5rem;
+    margin-left: 0;
+    height: calc(100% - 4rem);
+  }
+
+  .render-area.has-component {
+    padding: 0;
+  }
+
+  .empty-state {
+    text-align: center;
+    color: var(--subtle);
+    padding: 3rem 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  .empty-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.4;
+  }
+
+  .empty-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--fg);
+  }
+
+  .empty-subtitle {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+  }
+
+  .component-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin: 1rem 1.5rem;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .action-button {
+    background: linear-gradient(135deg, var(--primary), var(--accent1));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .action-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--cta-shadow);
+  }
+
+  .action-button.secondary {
+    background: var(--subtle);
+    color: white;
+  }
+
+  /* Component Display */
+  #notepad-container {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #notepad-container .notepad-container {
+    height: 100%;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #notepad-container .notes-list {
+    flex: 1;
+    padding: 1rem;
+    overflow-y: auto;
+  }
+
+  /* NoteCard Component Styles */
+  #notecard-container {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+
+  .notecard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    padding: 1rem 0;
+  }
+
+  .notecard {
+    background: var(--card-bg);
+    border: 1px solid var(--accent1);
+    border-radius: 12px;
+    padding: 1rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .notecard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px var(--shadow);
+    border-color: var(--primary);
+  }
+
+  .notecard.pinned {
+    border-color: var(--accent1);
+    background: linear-gradient(135deg, var(--card-bg), rgba(var(--primary-rgb), 0.05));
+  }
+
+
+
+  .notecard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+
+  .notecard-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin: 0;
+    line-height: 1.3;
+    flex: 1;
+    margin-right: 0.5rem;
+  }
+
+  .notecard-menu {
+    background: transparent;
+    border: none;
+    color: var(--subtle);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0;
+  }
+
+  .notecard:hover .notecard-menu {
+    opacity: 1;
+  }
+
+  .notecard-menu:hover {
+    background: var(--accent1);
+    color: var(--fg);
+  }
+
+  .notecard-content {
+    margin-bottom: 1rem;
+  }
+
+  .notecard-preview {
+    color: var(--subtle);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    margin: 0;
+  }
+
+  .notecard-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: auto;
+  }
+
+  .notecard-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .notecard-date {
+    font-size: 0.65rem;
+    color: var(--muted);
+    opacity: 0.8;
+  }
+
+  .notecard-tag {
+    background: var(--primary);
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+  }
+
+  .notecard-actions {
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+
+  .notecard:hover .notecard-actions {
+    opacity: 1;
+  }
+
+  .notecard-action {
+    background: transparent;
+    border: none;
+    color: var(--subtle);
+    cursor: pointer;
+    padding: 0.4rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .notecard-action:hover {
+    background: var(--accent1);
+    color: var(--fg);
+  }
+
+  .notecard-action.pin:hover {
+    background: var(--primary);
+    color: white;
+  }
+
+  .notecard-action.delete:hover {
+    background: #ef4444;
+    color: white;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 1024px) {
+    .main-layout {
+      grid-template-columns: 250px 1fr;
+    }
+
+    .component-sidebar {
+      padding: 1.25rem 0.75rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .enhanced-header {
+      padding: 1rem 0;
+      margin-bottom: 1rem;
+    }
+
+    .header-content {
+      flex-direction: column;
+      text-align: center;
+      gap: 1rem;
+    }
+
+    .page-title {
+      font-size: 1.8rem;
+    }
+
+    .page-stats {
+      justify-content: center;
+    }
+
+    .main-layout {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+
+    .component-sidebar {
+      flex-direction: row;
+      overflow-x: auto;
+      gap: 0.75rem;
+      padding: 1rem;
+      border-right: none;
+      border-bottom: 1px solid var(--accent1);
+      height: auto;
+    }
+
+    .component-card {
+      min-width: 180px;
+      flex-shrink: 0;
+    }
+
+    .render-area {
+      margin: 1rem;
+      height: 500px;
+    }
+
+    .component-actions {
+      margin: 1rem;
+      justify-content: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .page-title {
+      font-size: 1.5rem;
+    }
+
+    .enhanced-header {
+      padding: 0.75rem 0;
+      margin-bottom: 0.75rem;
+    }
+
+    .component-sidebar {
+      flex-direction: column;
+      overflow-x: visible;
+      padding: 0.75rem;
+    }
+
+    .component-card {
+      min-width: auto;
+    }
+
+    .render-area {
+      margin: 0.75rem;
+      height: 400px;
+    }
+
+    .action-button {
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .component-actions {
+      gap: 0.5rem;
+      margin: 0.75rem;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="components-page">
+  <!-- Enhanced Header -->
+  <div class="enhanced-header">
+    <div class="container">
+      <div class="header-content">
+        <div class="header-left">
+          <h1 class="page-title">Component <span class="momentum">Testing</span></h1>
+          <p class="page-subtitle">Internal testing ground for UI components</p>
+          <div class="page-stats">
+            <div class="stat-item">
+              <span class="stat-number" id="component-count">2</span>
+              <span class="stat-label">Components</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number" id="note-count">0</span>
+              <span class="stat-label">Notes</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number" id="test-runs">0</span>
+              <span class="stat-label">Tests Run</span>
+            </div>
+          </div>
+        </div>
+        <div class="theme-controls">
+          <div class="theme-toggle">
+            <button class="theme-option active" data-theme="light">
+              ☀️ Light
+            </button>
+            <button class="theme-option" data-theme="dark">
+              🌙 Dark
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Logo -->
+    <div class="logo position-absolute top-0 start-0 m-4" style="z-index: 1000;">
+      <a href="{{ url_for('index') }}">Moji</a>
+    </div>
+  </div>
+
+  <!-- Main Layout -->
+  <div class="main-layout">
+
+    <!-- Component Sidebar -->
+    <div class="component-sidebar">
+      <h3 class="sidebar-title">Available Components</h3>
+
+      <!-- Notepad Component Card -->
+      <div class="component-card" data-component="notepad">
+        <div class="component-card-title">
+          📝 Notepad
+          <span class="component-badge">Active</span>
+        </div>
+        <div class="component-card-desc">
+          Note-taking component with glassmorphism design and full CRUD functionality
+        </div>
+      </div>
+
+      <!-- NoteCard Component Card -->
+      <div class="component-card" data-component="notecard">
+        <div class="component-card-title">
+          🗂️ NoteCard
+          <span class="component-badge">Active</span>
+        </div>
+        <div class="component-card-desc">
+          Interactive note cards with pin/delete functionality and clean grid layout
+        </div>
+      </div>
+
+      <!-- Future Components -->
+      <div class="component-card disabled" data-component="charts">
+        <div class="component-card-title">
+          📊 Charts
+          <span class="component-badge" style="background: var(--muted);">Soon</span>
+        </div>
+        <div class="component-card-desc">
+          Beautiful data visualization components with interactive features
+        </div>
+      </div>
+
+      <div class="component-card disabled" data-component="calendar">
+        <div class="component-card-title">
+          📅 Calendar
+          <span class="component-badge" style="background: var(--muted);">Soon</span>
+        </div>
+        <div class="component-card-desc">
+          Full-featured calendar widget with event management
+        </div>
+      </div>
+    </div>
+
+    <!-- Central Render Area -->
+    <div class="render-area" id="render-area">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-icon">🎨</div>
+        <h3 class="empty-title">Select a Component</h3>
+        <p class="empty-subtitle">Click on a component from the sidebar to test it here</p>
+      </div>
+
+      <!-- Notepad Container -->
+      <div id="notepad-container" style="display: none;">
+        <!-- Notepad will be rendered here -->
+      </div>
+
+      <!-- NoteCard Container -->
+      <div id="notecard-container" style="display: none;">
+        <!-- NoteCard will be rendered here -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Component Actions (appears when component is active) -->
+  <div class="component-actions" id="component-actions" style="display: none;">
+    <button class="action-button" id="open-modal-btn" style="display: none;">
+      🪟 Open as Modal
+    </button>
+    <button class="action-button secondary" id="reset-component-btn">
+      🔄 Reset Component
+    </button>
+    <button class="action-button secondary" id="clear-render-btn">
+      ❌ Clear Render Area
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script type="module">
+  import Notepad from '/static/scripts/components/notepad/notepad.js';
+  import NoteCard from '/static/scripts/components/notecard/notecard.js';
+
+  document.addEventListener('DOMContentLoaded', function() {
+    let testRuns = 0;
+    let notepad = null;
+    let notecard = null;
+    let activeComponent = null;
+
+    // Elements
+    const renderArea = document.getElementById('render-area');
+    const emptyState = document.getElementById('empty-state');
+    const notepadContainer = document.getElementById('notepad-container');
+    const notecardContainer = document.getElementById('notecard-container');
+    const componentActions = document.getElementById('component-actions');
+    const componentCards = document.querySelectorAll('.component-card:not(.disabled)');
+
+    // Theme toggle functionality
+    const themeOptions = document.querySelectorAll('.theme-option');
+    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+
+    themeOptions.forEach(option => {
+      option.classList.toggle('active', option.dataset.theme === currentTheme);
+
+      option.addEventListener('click', function() {
+        const theme = this.dataset.theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+
+        themeOptions.forEach(opt => opt.classList.remove('active'));
+        this.classList.add('active');
+
+        testRuns++;
+        document.getElementById('test-runs').textContent = testRuns;
+      });
+    });
+
+    // Component card click handlers
+    componentCards.forEach(card => {
+      card.addEventListener('click', function() {
+        const component = this.dataset.component;
+
+        if (component === 'notepad') {
+          renderNotepad();
+        } else if (component === 'notecard') {
+          renderNotecard();
+        }
+
+        // Update active state
+        componentCards.forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+
+        activeComponent = component;
+        testRuns++;
+        document.getElementById('test-runs').textContent = testRuns;
+      });
+    });
+
+    // Render notepad function
+    function renderNotepad() {
+      // Hide empty state
+      emptyState.style.display = 'none';
+      renderArea.classList.add('has-component');
+
+      // Show notepad container
+      notepadContainer.style.display = 'block';
+      notecardContainer.style.display = 'none';
+
+      // Initialize notepad if not exists
+      if (!notepad) {
+        notepad = new Notepad(notepadContainer);
+      }
+
+      notepad.init();
+
+      // Show actions
+      componentActions.style.display = 'flex';
+      document.getElementById('open-modal-btn').style.display = 'flex';
+
+      // Update stats
+      document.getElementById('note-count').textContent = notepad.notes.length;
+    }
+
+    // Render notecard function
+    function renderNotecard() {
+      console.log('renderNotecard() called');
+
+      // Hide empty state
+      emptyState.style.display = 'none';
+      renderArea.classList.add('has-component');
+
+      // Show notecard container
+      notecardContainer.style.display = 'block';
+      notepadContainer.style.display = 'none';
+
+      // Initialize notecard if not exists
+      if (!notecard) {
+        console.log('Initializing new NoteCard instance');
+
+        // Create a grid container for the notecards
+        notecardContainer.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="margin: 0; color: var(--fg);">📝 Note Cards</h2>
+            <button id="add-note-btn" class="action-button" style="margin: 0;">
+              ➕ Add Sample Note
+            </button>
+          </div>
+          <div class="notecard-grid" id="notecard-grid"></div>
+        `;
+
+        const grid = document.getElementById('notecard-grid');
+        console.log('Grid element:', grid);
+
+        notecard = new NoteCard(grid);
+        console.log('NoteCard instance created:', notecard);
+
+        // Add some dummy notecards for demonstration
+        const dummyNotes = [
+          {
+            title: 'Welcome to NoteCard!',
+            content: 'This is your first note card. You can pin important notes, delete unwanted ones, and click to view/edit them. Try interacting with the buttons that appear on hover!',
+            tag: 'welcome',
+            pinned: true
+          },
+          {
+            title: 'Meeting Notes - Q4 Planning',
+            content: 'Discussed quarterly objectives, budget allocation, and team restructuring. Key action items: finalize hiring plan, review marketing strategy, and prepare presentation for board meeting.',
+            tag: 'work',
+            pinned: false
+          },
+          {
+            title: 'Recipe: Chocolate Chip Cookies',
+            content: 'Ingredients: 2 cups flour, 1 cup butter, 3/4 cup brown sugar, 1/2 cup white sugar, 2 eggs, 2 tsp vanilla, 1 tsp baking soda, 1 tsp salt, 2 cups chocolate chips. Bake at 375°F for 9-11 minutes.',
+            tag: 'recipes',
+            pinned: true
+          },
+          {
+            title: 'Book Recommendations',
+            content: 'Must-read books for this year: "Atomic Habits" by James Clear, "The Psychology of Money" by Morgan Housel, "Educated" by Tara Westover, and "Sapiens" by Yuval Noah Harari.',
+            tag: 'reading',
+            pinned: false
+          },
+          {
+            title: 'Weekend Trip Ideas',
+            content: 'Potential destinations for the long weekend: Mountain cabin in Colorado, Beach house in San Diego, City break in Portland, or wine tasting in Napa Valley. Need to check availability and prices.',
+            tag: 'travel',
+            pinned: false
+          },
+          {
+            title: 'Daily Affirmations',
+            content: 'I am capable of achieving my goals. I choose to focus on positive thoughts. I am grateful for the opportunities that come my way. Every challenge is a chance to grow stronger.',
+            tag: 'personal',
+            pinned: true
+          }
+        ];
+
+        // Add each dummy note
+        dummyNotes.forEach(note => {
+          console.log('Adding dummy note:', note.title);
+          notecard.addNote(note.title, note.content, note.tag, note.pinned);
+        });
+
+        console.log('All dummy notes added. Total notes:', notecard.notes.length);
+
+        // Add event listener for adding more sample notes
+        document.getElementById('add-note-btn').addEventListener('click', function() {
+          const sampleTitles = [
+            'Project Ideas', 'Shopping List', 'Study Notes', 'Daily Journal',
+            'Workout Plan', 'Gift Ideas', 'Movie Watchlist', 'Code Snippets'
+          ];
+          const sampleContents = [
+            'Brainstorming session for the new mobile app features and user experience improvements.',
+            'Weekly grocery shopping: organic vegetables, fresh fruits, whole grain bread, and healthy snacks.',
+            'Important concepts and formulas for the upcoming exam preparation and review sessions.',
+            'Daily thoughts, experiences, and reflections on personal growth and achievements.',
+            'Monday: Cardio, Tuesday: Upper body, Wednesday: Yoga, Thursday: Lower body, Friday: Full body.',
+            'Birthday and holiday gift ideas for family members and close friends.',
+            'Must-watch movies and TV series recommended by friends and critics.',
+            'Useful code snippets and programming tips for future reference and learning.'
+          ];
+          const sampleTags = ['work', 'personal', 'health', 'education', 'entertainment', 'development'];
+
+          const randomTitle = sampleTitles[Math.floor(Math.random() * sampleTitles.length)];
+          const randomContent = sampleContents[Math.floor(Math.random() * sampleContents.length)];
+          const randomTag = Math.random() > 0.5 ? sampleTags[Math.floor(Math.random() * sampleTags.length)] : null;
+          const randomPinned = Math.random() > 0.7;
+
+          notecard.addNote(randomTitle, randomContent, randomTag, randomPinned);
+          document.getElementById('note-count').textContent = notecard.notes.length;
+        });
+      }
+
+      notecard.render();
+      console.log('notecard.render() called. Container content:', notecardContainer.innerHTML);
+
+      // Show actions
+      componentActions.style.display = 'flex';
+      document.getElementById('open-modal-btn').style.display = 'none';
+
+      // Update stats
+      document.getElementById('note-count').textContent = notecard.notes.length;
+    }
+
+    // Action button handlers
+    document.getElementById('open-modal-btn').addEventListener('click', function() {
+      if (notepad) {
+        notepad.openAsModal();
+        testRuns++;
+        document.getElementById('test-runs').textContent = testRuns;
+      }
+    });
+
+    document.getElementById('reset-component-btn').addEventListener('click', function() {
+      if (activeComponent === 'notepad' && notepad) {
+        notepad.notes = [];
+        notepad.renderNoteCards();
+        document.getElementById('note-count').textContent = 0;
+        testRuns++;
+        document.getElementById('test-runs').textContent = testRuns;
+      } else if (activeComponent === 'notecard' && notecard) {
+        notecard.notes = [];
+        notecard.render();
+        document.getElementById('note-count').textContent = 0;
+        testRuns++;
+        document.getElementById('test-runs').textContent = testRuns;
+      }
+    });
+
+    document.getElementById('clear-render-btn').addEventListener('click', function() {
+      // Clear render area
+      emptyState.style.display = 'block';
+      renderArea.classList.remove('has-component');
+      notepadContainer.style.display = 'none';
+      notecardContainer.style.display = 'none';
+      componentActions.style.display = 'none';
+
+      // Clear active states
+      componentCards.forEach(c => c.classList.remove('active'));
+      activeComponent = null;
+
+      testRuns++;
+      document.getElementById('test-runs').textContent = testRuns;
+    });
+
+    // Update note count when notes change
+    const originalRenderNoteCards = Notepad.prototype.renderNoteCards;
+    Notepad.prototype.renderNoteCards = function() {
+      originalRenderNoteCards.call(this);
+      if (this.notes) {
+        document.getElementById('note-count').textContent = this.notes.length;
+      }
+    };
+  });
+</script>
+{% endblock %}
