@@ -3,6 +3,7 @@ import os
 from flask import Flask, render_template
 from flask_migrate import Migrate
 
+from models import db
 from routes.api import api_bp
 from routes.auth import auth_bp
 
@@ -19,6 +20,7 @@ db.init_app(app)
 migrate = Migrate(app, db)
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(api_bp)
 app.register_blueprint(api_bp)
 
 
