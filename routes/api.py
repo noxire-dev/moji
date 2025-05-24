@@ -34,20 +34,20 @@ def get_user_from_pid(p_id):
     return jsonify(user.get_user_dict())
 
 
-@api_bp.route("/v1/user-projects/<string:p_id>", method=["GET"])
+@api_bp.route("/v1/user-projects/<string:p_id>", methods=["GET"])
 def projects_of_user(p_id):
     user = User.get_by_field("public_id", p_id)
     if not user:
         flash("User not found!", "error")
         return jsonify({"error": "User not found"}), 404
 
-    cleaned_projects = user.projects
-    for project in cleaned_projects:
-        project.pop("owner_id")
-    return jsonify(cleaned_projects)
+    projects = [Project.to_dict(project) for project in user.projects]
+    for project in projects:
+        project.pop("owner_id", None)
+    return jsonify(projects)
 
 
-@api_bp.route("/v1/create-project", method=["POST"])
+@api_bp.route("/v1/create-project", methods=["POST"])
 def create_project():
     data = request.json
     if not data:
@@ -56,11 +56,26 @@ def create_project():
     if not data.get("name"):
         flash("Name is required", "error")
         return jsonify({"error": "Name is required"}), 400
-    name = data.get("name")
-    description = data.get("description")
+
     owner_id = session.get("user_id")
     owner_p_id = session.get("user_p_id")
-    Project.create(
-        name=name, description=description, owner_id=owner_id, owner_p_id=owner_p_id
-    )
-    return jsonify({"message": "Project created successfully"}), 201
+    if not owner_id or not owner_p_id:
+        flash("User not logged in", "error")
+        return jsonify({"error": "User not logged in"}), 401
+
+    name = data.get("name")
+    description = data.get("description")
+
+    try:
+        project = Project.create(
+            name=name, description=description, owner_id=owner_id, owner_p_id=owner_p_id
+        )
+        return jsonify(
+            {
+                "message": "Project created successfully",
+                "project": Project.to_dict(project),
+            }
+        ), 201
+    except Exception as e:
+        flash("Error creating project", "error")
+        return jsonify({"error": str(e)}), 500

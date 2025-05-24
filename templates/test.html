@@ -448,7 +448,9 @@
 
   // Project sidebar item click
   const projectItems = document.querySelectorAll('.project-item');
+
   projectItems.forEach(item => {
+    const projectModalSaveBtn = document.getElementById('add-project');
     if (!item.classList.contains('add-project')) {
       item.addEventListener('click', function() {
         const projectName = this.querySelector('.project-name').textContent;
@@ -467,6 +469,27 @@
       item.addEventListener('click', function() {
         // Show dialog to add a new project
         projectModal.show();
+        projectModalSaveBtn.addEventListener('click', function() {
+          const projectName = document.getElementById('project-name').value;
+          const projectDescription = document.getElementById('project-description').value;
+          const projectAdd = document.getElementById('add-project').textContent;
+          alert(`Project added: ${projectName}`);
+
+          async function addProject() {
+            const project = {
+              name: projectName,
+              description: projectDescription
+            };
+            fetch('/api/v1/create-project', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(project)
+            });
+            console.log(project);
+          }
+        });
       });
     }
   });
