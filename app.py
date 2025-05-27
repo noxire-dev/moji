@@ -3,6 +3,7 @@ import os
 from flask import Flask, render_template
 from flask_migrate import Migrate
 
+from models import db
 from routes.api import api_bp
 from routes.auth import auth_bp
 
