@@ -176,6 +176,27 @@
   </div>
 </div>
 
+  <!-- Modal for Project Creation -->
+  <div class="modal fade" id="projectModal" tabindex="-1" aria-labelledby="projectModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="projectModalLabel">Create Project</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" class="form-control mb-3" id="project-name" placeholder="Project Name">
+          <textarea class="form-control" id="project-description" rows="10" placeholder="Project description..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn cta-button" id="add-project">Add Project</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   // Auto-resize textarea as you type
   const commandInput = document.getElementById('command-input');
@@ -185,7 +206,7 @@
   function adjustInputHeight() {
     // Reset height to auto first to shrink if needed
     commandInput.style.height = 'auto';
-    
+
     // Calculate the right height (between min and max height)
     const newHeight = Math.min(Math.max(commandInput.scrollHeight, 48), 150);
     commandInput.style.height = newHeight + 'px';
@@ -208,14 +229,14 @@
   // Show appropriate suggestions based on input
   commandInput.addEventListener('input', function() {
     const input = this.value.toLowerCase();
-    
+
     if (input.startsWith('/')) {
-      const matchingCommands = commands.filter(cmd => 
+      const matchingCommands = commands.filter(cmd =>
         cmd.command.startsWith(input)
       );
-      
+
       if (matchingCommands.length > 0) {
-        commandSuggestions.innerHTML = matchingCommands.map(cmd => 
+        commandSuggestions.innerHTML = matchingCommands.map(cmd =>
           `<div class="command-suggestion">${cmd.command} - ${cmd.description}</div>`
         ).join('');
         commandSuggestions.style.display = 'block';
@@ -235,12 +256,21 @@
     }
   });
 
+  commandInput.addEventListener('keydown', function(e) {
+    if (e.keyCode === 9) {
+      e.preventDefault();
+      commandSuggestions.innerHTML = '';
+      console.log('Tab pressed');
+      commandInput.value = '';
+    }
+  });
+
   // Function to process the command
   function processCommand() {
     const input = commandInput.value.trim();
-    
+
     if (!input) return;
-    
+
     if (input.startsWith('/todo ')) {
       // Add todo logic
       const todoText = input.slice(6);
@@ -260,7 +290,7 @@
       addNote(input);
       commandInput.value = '';
     }
-    
+
     // Reset height and hide suggestions
     adjustInputHeight();
     commandSuggestions.style.display = 'none';
@@ -270,7 +300,7 @@
   function addTodo(text) {
     const todosList = document.querySelector('.todos-list');
     const todoId = 'todo' + (todosList.children.length + 1);
-    
+
     const todoItem = document.createElement('div');
     todoItem.className = 'todo-item';
     todoItem.innerHTML = `
@@ -281,7 +311,7 @@
         </label>
       </div>
     `;
-    
+
     todosList.appendChild(todoItem);
   }
 
@@ -289,7 +319,7 @@
   function addNote(text) {
     const notesList = document.querySelector('.notes-list');
     const noteId = notesList.children.length + 1;
-    
+
     const noteCard = document.createElement('div');
     noteCard.className = 'note-card';
     noteCard.setAttribute('data-id', noteId);
@@ -297,7 +327,7 @@
       <h3>New Note</h3>
       <div class="note-preview">${text.slice(0, 50)}${text.length > 50 ? '...' : ''}</div>
     `;
-    
+
     notesList.appendChild(noteCard);
   }
 
@@ -329,32 +359,89 @@
   // Note modal handling
   const noteCards = document.querySelectorAll('.note-card');
   let noteModal;
-
+  let projectModal;
   // Initialize modal after DOM is loaded
   document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded');
     console.log('Note cards found:', noteCards.length);
-    
+
     try {
       noteModal = new bootstrap.Modal(document.getElementById('noteModal'));
+      projectModal = new bootstrap.Modal(document.getElementById('projectModal'));
       console.log('Modal initialized successfully');
+
+      // Add event listener for create project button - SINGLE LISTENER
+      document.getElementById('add-project').addEventListener('click', async function() {
+        const projectName = document.getElementById('project-name').value.trim();
+        const projectDescription = document.getElementById('project-description').value.trim();
+
+        if (!projectName) {
+          alert('Project name is required');
+          return;
+        }
+
+        console.log('Project name:', projectName);
+        console.log('Project description:', projectDescription);
+
+        try {
+          const response = await fetch('/api/v1/create-project', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name: projectName, description: projectDescription })
+          });
+
+          const data = await response.json();
+          console.log('Response status:', response.status);
+          console.log('Response data:', data);
+
+          if (response.ok) {
+            console.log('Project added:', data);
+            // Add the new project to the projects list
+            const projectsList = document.querySelector('.projects-list');
+            const projectItem = document.createElement('div');
+            projectItem.className = 'project-item';
+            projectItem.innerHTML = `
+              <span class="project-name">${projectName}</span>
+            `;
+
+            // Insert before the "Add Project" item
+            const addProjectItem = document.querySelector('.project-item.add-project');
+            projectsList.insertBefore(projectItem, addProjectItem);
+
+            // Clear the form and close the modal
+            document.getElementById('project-name').value = '';
+            document.getElementById('project-description').value = '';
+            projectModal.hide();
+
+            alert('Project created successfully!');
+          } else {
+            console.error('Error creating project:', data.message || data.error);
+            alert('Error creating project: ' + (data.message || data.error || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('Error creating project. Please try again.');
+        }
+      });
     } catch (error) {
       console.error('Error initializing modal:', error);
     }
-    
+
     noteCards.forEach(card => {
       card.addEventListener('click', function() {
         console.log('Note card clicked');
         const noteId = this.getAttribute('data-id');
         const noteTitle = this.querySelector('h3').textContent;
         console.log('Note ID:', noteId, 'Title:', noteTitle);
-        
+
         document.getElementById('noteModalLabel').textContent = noteTitle;
         document.getElementById('note-title').value = noteTitle;
-        
+
         // In a real app, you'd fetch the full note content
         document.getElementById('note-content').value = 'This is the full content of note #' + noteId;
-        
+
         try {
           noteModal.show();
           console.log('Modal show called');
@@ -363,76 +450,77 @@
         }
       });
     });
-  });
 
-  // Add event listeners for new buttons
-  document.getElementById('new-btn').addEventListener('click', function() {
-    // Show a dropdown or a modal with options to create a new todo, note, or project
-    alert('Create new item: Todo, Note, or Project');
-  });
-
-  document.getElementById('search-btn').addEventListener('click', function() {
-    // Show search interface
-    alert('Search functionality coming soon!');
-  });
-
-  document.getElementById('profile-btn').addEventListener('click', function() {
-    // Show profile or settings
-    alert('User profile and settings coming soon!');
-  });
-
-  document.getElementById('menu-btn').addEventListener('click', function() {
-    // Show main menu or navigation
-    alert('Main menu coming soon!');
-  });
-
-  // Project selection
-  document.getElementById('project-select').addEventListener('change', function() {
-    const projectName = this.value;
-    
-    // Update active project in sidebar
-    const projectItems = document.querySelectorAll('.project-item');
-    projectItems.forEach(item => {
-      const name = item.querySelector('.project-name').textContent.toLowerCase();
-      if (name === projectName) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
+    // Add event listeners for new buttons
+    document.getElementById('new-btn').addEventListener('click', function() {
+      // Show a dropdown or a modal with options to create a new todo, note, or project
+      alert('Create new item: Todo, Note, or Project');
     });
-    
-    // In a real app, you'd load the todos and notes for the selected project
-    alert(`Switched to ${projectName} project`);
-  });
+
+    document.getElementById('search-btn').addEventListener('click', function() {
+      // Show search interface
+      alert('Search functionality coming soon!');
+    });
+
+    document.getElementById('profile-btn').addEventListener('click', function() {
+      // Show profile or settings
+      alert('User profile and settings coming soon!');
+    });
+
+    document.getElementById('menu-btn').addEventListener('click', function() {
+      // Show main menu or navigation
+      alert('Main menu coming soon!');
+    });
+
+    // Project selection
+    document.getElementById('project-select').addEventListener('change', function() {
+      const projectName = this.value;
+
+      // Update active project in sidebar
+      const projectItems = document.querySelectorAll('.project-item');
+      projectItems.forEach(item => {
+        const name = item.querySelector('.project-name').textContent.toLowerCase();
+        if (name === projectName) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+
+      // In a real app, you'd load the todos and notes for the selected project
+      alert(`Switched to ${projectName} project`);
+    });
 
   // Project sidebar item click
   const projectItems = document.querySelectorAll('.project-item');
+
   projectItems.forEach(item => {
     if (!item.classList.contains('add-project')) {
       item.addEventListener('click', function() {
         const projectName = this.querySelector('.project-name').textContent;
-        
-        // Update dropdown
-        document.getElementById('project-select').value = projectName.toLowerCase();
-        
-        // Update active state
-        projectItems.forEach(p => p.classList.remove('active'));
-        this.classList.add('active');
-        
+
+          // Update dropdown
+          document.getElementById('project-select').value = projectName.toLowerCase();
+
+          // Update active state
+          projectItems.forEach(p => p.classList.remove('active'));
+          this.classList.add('active');
+
         // In a real app, you'd load the todos and notes for the selected project
         alert(`Switched to ${projectName} project`);
       });
     } else {
       item.addEventListener('click', function() {
         // Show dialog to add a new project
-        alert('Add new project dialog coming soon!');
+        projectModal.show();
       });
     }
   });
 
-  // Make sure to focus the command input when the page loads
-  window.addEventListener('load', function() {
-    commandInput.focus();
+    // Make sure to focus the command input when the page loads
+    window.addEventListener('load', function() {
+      commandInput.focus();
+    });
   });
 </script>
 {% endblock %}

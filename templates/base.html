@@ -39,31 +39,34 @@
   </script>
   {% block extra_head %}{% endblock %}
 </head>
-<!-- Flash messages -->
-    <div class="container mt-4 alert-container">
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <div class="alert-container">
-        {% for category, message in messages %}
-        <div
-          class="alert alert-{{ category }} alert-dismissible fade show"
-          role="alert"
-        >
-          {{ message }}
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="alert"
-            aria-label="Close"
-          ></button>
-        </div>
-        {% endfor %}
-      </div>
-      {% endif %} {% endwith %}
-    </div>
 
 <body>
-  {% block content %}{% endblock %}
+  <!-- Flash messages -->
+  <div class="container mt-4 alert-container">
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <div class="alert-container">
+      {% for category, message in messages %}
+      <div
+        class="alert alert-{{ category }} alert-dismissible fade show"
+        role="alert"
+      >
+        {{ message }}
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="alert"
+          aria-label="Close"
+        ></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
+  </div>
+
+  <main style="flex: 1;">
+    {% block content %}{% endblock %}
+  </main>
 
   <footer class="footer">
     <div class="footer-left">A quiet tool for noisy days — @noxire</div>
@@ -92,6 +95,7 @@
         localStorage.setItem('texture', newTexture);
       });
     }
+
   </script>
   {% block extra_scripts %}{% endblock %}
 </body>

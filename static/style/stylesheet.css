@@ -92,6 +92,8 @@ body {
   color: var(--fg);
   transition: background-color 0.3s ease, color 0.3s ease;
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Typography */
@@ -540,5 +542,53 @@ input[type="checkbox"]:checked + label .task-text {
   .logo-img {
     height: 50px !important;
     width: 50px !important;
+  }
+}
+
+/* Footer Styles */
+.footer {
+  background-color: var(--card-bg);
+  color: var(--fg);
+  padding: 1.5rem 2rem;
+  margin-top: auto;
+  border-top: 2px solid var(--accent1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 10;
+}
+
+.footer-left {
+  font-size: 0.9rem;
+  color: var(--subtle);
+  transition: color 0.3s ease;
+}
+
+.footer-right {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.footer:hover .footer-left,
+.footer:hover .footer-right {
+  color: var(--fg);
+}
+
+/* Responsive footer */
+@media (max-width: 768px) {
+  .footer {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .footer-left,
+  .footer-right {
+    font-size: 0.8rem;
   }
 }

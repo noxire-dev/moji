@@ -56,8 +56,14 @@ class BaseModel(db.Model):
     @classmethod
     def create(cls, **kwargs):
         """Create a new instance of the model with the given attributes."""
-        instance = cls(**kwargs)
-        return instance
+        try:
+            instance = cls(**kwargs)
+            instance.save()
+            print("Model created successfully")
+            return instance
+        except Exception as e:
+            print(e)
+            raise e
 
     @classmethod
     def restore(cls, instance):
@@ -244,27 +250,6 @@ class User(BaseModel, PidMixIn):
 
         return instance
 
-    # Relationships
-    projects = db.relationship(
-        "Project",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
-    todos = db.relationship(
-        "Todo",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
-    notes = db.relationship(
-        "Note",
-        back_populates="user",
-        cascade="all, delete-orphan",
-        passive_deletes=True,
-    )
-    license = db.relationship("License", back_populates="users")
-
 
 class Project(BaseModel, PidMixIn):
     """Project model for organizing todos and notes."""
@@ -275,12 +260,6 @@ class Project(BaseModel, PidMixIn):
     owner_id = db.Column(
         db.Integer,
         db.ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    owner_p_id = db.Column(
-        db.String(128),
-        db.ForeignKey("user.public_id", ondelete="CASCADE"),
         nullable=False,
         index=True,
     )

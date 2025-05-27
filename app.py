@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from models import db
 from routes.api import api_bp
 from routes.auth import auth_bp
+from utils import login_required
 
 app = Flask(__name__)
 
@@ -28,7 +29,13 @@ def index():
     return render_template("index.html")
 
 
+@app.route("/components")
+def components():
+    return render_template("components.html")
+
+
 @app.route("/test")
+@login_required
 def test():
     return render_template("test.html")
 
