@@ -29,15 +29,15 @@ def index():
     return render_template("index.html")
 
 
-@app.route("/components")
-def components():
-    return render_template("components.html")
-
-
 @app.route("/test")
 @login_required
 def test():
     return render_template("test.html")
+
+
+@app.route("/components")
+def components():
+    return render_template("components.html")
 
 
 if __name__ == "__main__":

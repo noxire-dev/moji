@@ -1,6 +1,6 @@
 /* ======================================
    MOJI NOTEPAD COMPONENT
-   Modular note-taking interface with enhanced UX
+   Minimalistic Apple-esque design with clean aesthetics
    ====================================== */
 
 /* Component Container */
@@ -28,8 +28,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--card-bg);
+  padding: 2rem 2rem 1rem 2rem;
   background-color: var(--bg);
   position: sticky;
   top: 0;
@@ -37,17 +36,16 @@
 }
 
 .notes-header h2 {
-  font-size: 0.9rem;
+  font-size: 1.75rem;
   font-weight: 600;
   margin: 0;
-  color: var(--primary);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  color: var(--fg);
+  letter-spacing: -0.025em;
 }
 
 .notes-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
   align-items: center;
 }
 
@@ -56,88 +54,95 @@
   background-color: var(--primary);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  font-size: 0.8rem;
-  font-weight: 600;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  letter-spacing: -0.01em;
 }
 
 .add-note-btn:hover {
   background-color: var(--hover);
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px var(--shadow);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .add-note-btn:active {
   transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Notes List Container */
 .notes-list {
-  padding: 1rem;
+  padding: 0 2rem 2rem 2rem;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
   overflow-y: auto;
   flex: 1;
 }
 
-/* Individual Note Card */
+/* Individual Note Card - Apple-esque minimalism */
 .note-card {
-  background: var(--card-bg);
-  border-radius: 12px;
-  padding: 1.25rem;
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  padding: 1.75rem;
   cursor: pointer;
-  border: 1px solid var(--accent1);
+  border: 1px solid transparent;
   transition: all 0.2s ease;
   position: relative;
+  overflow: hidden;
   min-height: 140px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 2px 8px var(--shadow);
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .note-card:hover {
-  border-color: var(--primary);
-  box-shadow: 0 4px 16px var(--shadow);
+  border-color: var(--accent1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transform: translateY(-2px);
 }
 
 .note-card:active {
   transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
 }
 
 /* Note Card States */
 .note-card.selected {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--cta-shadow);
+  box-shadow: 0 0 0 1px var(--primary);
 }
 
 .note-card.pinned {
-  background: linear-gradient(135deg, var(--card-bg) 0%, var(--card-bg) 95%, var(--accent1) 95%);
+  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(var(--primary-rgb), 0.02) 100%);
 }
 
-.note-card.pinned::after {
-  content: '📌';
+.note-card.pinned::before {
+  content: '';
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  font-size: 0.8rem;
-  opacity: 0.7;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--primary);
 }
 
-/* Note Content */
+/* Note Content - Simplified Structure */
 .note-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 0.75rem;
-  gap: 0.75rem;
+  gap: 1rem;
+  margin: 0;
 }
 
 .note-title {
@@ -146,27 +151,30 @@
   margin: 0;
   color: var(--fg);
   line-height: 1.4;
+  letter-spacing: -0.02em;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+  flex: 1;
 }
 
 .note-menu {
   opacity: 0;
   transition: opacity 0.2s ease;
-  background: none;
+  background: transparent;
   border: none;
-  color: var(--subtle);
+  color: var(--muted);
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 6px;
+  font-size: 1.2rem;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1rem;
-  width: 24px;
-  height: 24px;
+  flex-shrink: 0;
 }
 
 .note-card:hover .note-menu {
@@ -174,47 +182,59 @@
 }
 
 .note-menu:hover {
-  background: var(--accent1);
+  background-color: var(--bg);
   color: var(--fg);
 }
 
 .note-content {
   flex: 1;
-  margin-bottom: 0.75rem;
+  margin: 0;
 }
 
 .note-preview {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--subtle);
   line-height: 1.5;
-  margin: 0;
-  overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  letter-spacing: -0.01em;
 }
 
-/* Note Metadata */
+/* Note Metadata - Simplified */
 .note-footer {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
-  margin-top: auto;
+  margin: 0;
+  gap: 1rem;
+}
+
+.note-date {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .note-tags {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 .note-tag {
-  background: var(--primary);
-  color: white;
-  font-size: 0.7rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: 6px;
+  background-color: var(--bg);
+  color: var(--subtle);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
   font-weight: 500;
+  border: 1px solid var(--accent1);
+  letter-spacing: 0.01em;
 }
 
 /* Empty State */
@@ -224,65 +244,30 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 3rem 1rem;
+  padding: 4rem 2rem;
   color: var(--muted);
   height: 100%;
 }
 
 .notes-empty-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.5;
+  font-size: 3.5rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.4;
 }
 
 .notes-empty-title {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
   color: var(--fg);
+  letter-spacing: -0.02em;
 }
 
 .notes-empty-subtitle {
-  font-size: 0.9rem;
-  margin-bottom: 1.5rem;
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  opacity: 0.7;
 }
-
-/* Search */
-.notes-search {
-  padding: 1rem 1.5rem;
-  border-top: 1px solid var(--card-bg);
-  background-color: var(--bg);
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
-}
-
-.search-input {
-  width: 100%;
-  background: var(--card-bg);
-  border: 1px solid var(--accent1);
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  color: var(--fg);
-  font-size: 0.9rem;
-  transition: all 0.2s ease;
-  font-family: var(--font);
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--cta-shadow);
-}
-
-.search-input::placeholder {
-  color: var(--muted);
-}
-
-/* ======================================
-   NOTE EDITOR STYLES - MINIMALIST APPLE-ESQUE
-   Clean, simple, and beautiful note editing
-   ====================================== */
 
 /* Note Editor Overlay */
 .note-editor-overlay {
@@ -291,116 +276,99 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(20px);
-  z-index: 3000;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  opacity: 0;
-  animation: editorFadeIn 0.2s ease-out forwards;
+  backdrop-filter: blur(8px);
 }
 
-.note-editor-overlay.closing {
-  animation: editorFadeOut 0.2s ease-in forwards;
-}
-
-/* Note Editor Container */
 .note-editor-container {
   width: 100%;
-  max-width: 600px;
-  max-height: 80vh;
-  border-radius: 20px;
+  max-width: 700px;
+  max-height: 85vh;
   overflow: hidden;
-  box-shadow:
-    0 20px 40px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.1);
-  transform: scale(0.95) translateY(20px);
-  animation: editorSlideIn 0.2s ease-out 0.05s forwards;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
-/* Note Editor Main */
 .note-editor {
-  background: var(--bg);
-  display: flex;
-  flex-direction: column;
+  background-color: var(--bg);
+  border-radius: 20px;
+  padding: 0;
+  overflow: hidden;
+  transition: all 0.3s ease;
   height: 100%;
-}
-
-/* Note Editor Header */
-.note-editor-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 1rem 1.5rem 0;
-}
-
-.note-editor-close {
-  background: none;
-  border: none;
-  color: var(--subtle);
-  font-size: 1.2rem;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.note-editor-close:hover {
-  background: var(--card-bg);
-  color: var(--fg);
-}
-
-/* Note Editor Body */
-.note-editor-body {
-  padding: 0 1.5rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  flex: 1;
-  min-height: 0;
 }
 
-/* Title Input */
+.note-editor-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--accent1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--card-bg);
+}
+
+.note-editor-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.note-editor-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.note-editor-body {
+  padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
 .note-title-input {
   width: 100%;
-  background: none;
+  background-color: transparent;
   border: none;
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--fg);
   padding: 0;
-  transition: all 0.2s ease;
-  font-family: var(--font);
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--accent1);
+  padding-bottom: 1rem;
+  transition: border-color 0.2s ease;
+  letter-spacing: -0.025em;
 }
 
 .note-title-input:focus {
   outline: none;
+  border-bottom-color: var(--primary);
 }
 
 .note-title-input::placeholder {
   color: var(--muted);
-  font-weight: 400;
+  font-weight: 500;
 }
 
-/* Content Textarea */
 .note-content-input {
   width: 100%;
-  flex: 1;
-  background: none;
+  min-height: 300px;
+  background-color: transparent;
   border: none;
   color: var(--fg);
   font-size: 1rem;
   line-height: 1.6;
-  resize: none;
+  resize: vertical;
   transition: all 0.2s ease;
-  font-family: var(--font);
-  padding: 0;
+  letter-spacing: -0.01em;
 }
 
 .note-content-input:focus {
@@ -411,366 +379,129 @@
   color: var(--muted);
 }
 
-/* Bottom Actions */
-.note-bottom-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--card-bg);
+/* Search */
+.notes-search {
+  padding: 0 2rem 1.5rem 2rem;
+  background-color: var(--bg);
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
 }
 
-.note-tags-input {
+.search-input {
   width: 100%;
-  background: none;
-  border: none;
+  background-color: var(--card-bg);
+  border: 1px solid var(--accent1);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
   color: var(--fg);
-  font-size: 0.9rem;
-  padding: 0;
+  font-size: 0.95rem;
   transition: all 0.2s ease;
-  font-family: var(--font);
+  letter-spacing: -0.01em;
 }
 
-.note-tags-input:focus {
+.search-input:focus {
   outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
 }
 
-.note-tags-input::placeholder {
+.search-input::placeholder {
   color: var(--muted);
 }
 
-.note-actions {
-  display: flex;
-  gap: 0.75rem;
-  justify-content: flex-end;
-}
-
-.note-save-btn, .note-delete-btn {
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.6rem 1.2rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: var(--font);
-}
-
-.note-delete-btn {
-  background: transparent;
-  color: var(--accent2);
-}
-
-.note-save-btn:hover {
-  background: var(--hover);
-  transform: translateY(-1px);
-}
-
-.note-delete-btn:hover {
-  background: var(--accent2);
-  color: white;
-  transform: translateY(-1px);
-}
-
-/* Animations */
-@keyframes editorFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes editorFadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-@keyframes editorSlideIn {
+/* Animations - More subtle */
+@keyframes noteSlideIn {
   from {
-    transform: scale(0.95) translateY(20px);
     opacity: 0;
+    transform: translateY(10px);
   }
   to {
-    transform: scale(1) translateY(0);
     opacity: 1;
+    transform: translateY(0);
   }
+}
+
+.note-card {
+  animation: noteSlideIn 0.3s ease-out forwards;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .note-editor-overlay {
-    padding: 1rem;
+  .notes-header {
+    padding: 1.5rem 1rem 1rem 1rem;
   }
 
-  .note-editor-container {
-    max-height: 90vh;
-    border-radius: 16px;
+  .notes-header h2 {
+    font-size: 1.5rem;
   }
 
-  .note-editor-header {
-    padding: 0.75rem 1rem 0;
-  }
-
-  .note-editor-body {
-    padding: 0 1rem 1rem;
-  }
-
-  .note-title-input {
-    font-size: 1.3rem;
-  }
-
-  .note-actions {
-    flex-direction: column-reverse;
-    gap: 0.5rem;
-  }
-
-  .note-save-btn, .note-delete-btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-/* ======================================
-   NOTEPAD MODAL STYLES
-   Modern, minimalist modal for note management
-   ====================================== */
-
-/* Modal Overlay */
-.notepad-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  opacity: 0;
-  animation: modalFadeIn 0.3s ease-out forwards;
-}
-
-.notepad-modal-overlay.closing {
-  animation: modalFadeOut 0.3s ease-in forwards;
-}
-
-/* Modal Container */
-.notepad-modal-container {
-  width: 100%;
-  max-width: 900px;
-  max-height: 85vh;
-  background: var(--bg);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow:
-    0 20px 60px rgba(0, 0, 0, 0.3),
-    0 8px 30px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-  transform: scale(0.9) translateY(20px);
-  animation: modalSlideIn 0.3s ease-out 0.1s forwards;
-}
-
-/* Modal Header */
-.notepad-modal-header {
-  background: linear-gradient(135deg, var(--card-bg), var(--bg));
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  backdrop-filter: blur(10px);
-}
-
-.notepad-modal-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-  color: var(--fg);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  letter-spacing: -0.02em;
-}
-
-.notepad-modal-close {
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  color: var(--subtle);
-  font-size: 1.5rem;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.notepad-modal-close:hover {
-  background: rgba(255, 75, 75, 0.2);
-  color: #ff4b4b;
-  transform: scale(1.1);
-}
-
-/* Modal Body */
-.notepad-modal-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background: var(--bg);
-}
-
-.notepad-modal-body .notes-header {
-  padding: 1.5rem 2rem 1rem;
-  border-bottom: none;
-  background: transparent;
-  position: static;
-}
-
-.notepad-modal-body .notes-list {
-  flex: 1;
-  padding: 0 2rem 1rem;
-  max-height: 50vh;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--primary) transparent;
-}
-
-.notepad-modal-body .notes-list::-webkit-scrollbar {
-  width: 6px;
-}
-
-.notepad-modal-body .notes-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.notepad-modal-body .notes-list::-webkit-scrollbar-thumb {
-  background: var(--primary);
-  border-radius: 3px;
-}
-
-.notepad-modal-body .notes-search {
-  padding: 1rem 2rem 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background: linear-gradient(to top, var(--card-bg), transparent);
-  position: static;
-}
-
-/* Enhanced Add Note Button for Modal */
-.notepad-modal-body .add-note-btn {
-  background: linear-gradient(135deg, var(--primary), var(--accent1));
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(var(--primary-rgb), 0.3);
-}
-
-.notepad-modal-body .add-note-btn:hover {
-  box-shadow: 0 6px 20px rgba(var(--primary-rgb), 0.4);
-  transform: translateY(-2px);
-}
-
-.notepad-modal-body .add-note-btn span {
-  font-size: 1.1rem;
-  margin-right: 0.5rem;
-}
-
-/* Modal Note Cards - Slightly smaller for modal context */
-.notepad-modal-body .note-card {
-  min-height: 140px;
-  padding: 1.25rem;
-}
-
-.notepad-modal-body .note-title {
-  font-size: 1.1rem;
-}
-
-.notepad-modal-body .note-preview {
-  font-size: 0.9rem;
-  -webkit-line-clamp: 2;
-}
-
-/* Animations */
-@keyframes modalFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes modalFadeOut {
-  from {
-    opacity: 1;
-  }
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes modalSlideIn {
-  from {
-    transform: scale(0.9) translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1) translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Responsive Modal */
-@media (max-width: 768px) {
-  .notepad-modal-overlay {
-    padding: 1rem;
-  }
-
-  .notepad-modal-container {
-    max-height: 90vh;
-    border-radius: 16px;
-  }
-
-  .notepad-modal-header {
-    padding: 1.25rem 1.5rem;
-  }
-
-  .notepad-modal-title {
-    font-size: 1.3rem;
-  }
-
-  .notepad-modal-body .notes-header {
-    padding: 1.25rem 1.5rem 0.75rem;
-  }
-
-  .notepad-modal-body .notes-list {
-    padding: 0 1.5rem 0.75rem;
+  .notes-list {
     grid-template-columns: 1fr;
+    padding: 0 1rem 2rem 1rem;
+    gap: 1rem;
   }
 
-  .notepad-modal-body .notes-search {
-    padding: 0.75rem 1.5rem 1.25rem;
+  .note-card {
+    padding: 1.5rem;
+    min-height: 120px;
+  }
+
+  .note-title {
+    font-size: 1rem;
+  }
+
+  .note-preview {
+    font-size: 0.9rem;
+    -webkit-line-clamp: 2;
+  }
+
+  .add-note-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .notes-search {
+    padding: 0 1rem 1.5rem 1rem;
   }
 }
 
 @media (max-width: 480px) {
-  .notepad-modal-container {
-    max-height: 95vh;
+  .notes-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
   }
 
-  .notepad-modal-header {
-    padding: 1rem 1.25rem;
+  .notes-actions {
+    width: 100%;
+    justify-content: flex-end;
   }
 
-  .notepad-modal-title {
-    font-size: 1.2rem;
+  .note-card {
+    padding: 1.25rem;
   }
+
+  .note-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+}
+
+/* Theme optimizations */
+html[data-theme="dark"] .note-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .note-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+html[data-theme="light"] .note-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+html[data-theme="light"] .note-card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
