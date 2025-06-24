@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from models import Task, User, db, Note
+from models import Task, User, db, Note, Workspace
 
 api = Blueprint("api", __name__, url_prefix="/api")
 
@@ -106,3 +106,43 @@ def update_note(note_id):
     except Exception as e:
         print(f"Error updating note: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
+@api.route("/notes/<int:note_id>", methods=["DELETE"])
+def delete_note(note_id):
+    try:
+        if user := User.query.filter_by(id=1).first():
+            workspace = user.workspaces[0]
+            note = Note.query.filter_by(id=note_id, workspace_id=workspace.id).first()
+            if note:
+                db.session.delete(note)
+                db.session.commit()
+                return jsonify({"message": "Note deleted successfully"})
+            else:
+                return jsonify({"error": "Note not found"}), 404
+        return jsonify({"error": "User not found"}), 404
+    except Exception as e:
+        print(f"Error deleting note: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+@api.route("/workspaces", methods=["GET"])
+def fetch_workspaces():
+    if user := User.query.filter_by(id=1).first():
+        workspaces = user.workspaces
+        return jsonify([workspace.to_dict() for workspace in workspaces])
+    return jsonify({"error": "User not found"}), 404
+
+
+@api.route("/workspaces", methods=["POST"])
+def create_workspace():
+    data = request.get_json()
+    user = User.query.filter_by(id=1).first()
+    if not user or not data:
+        return jsonify({"error": "User not found or no input data provided"}), 400
+    workspace = Workspace()
+    workspace.from_dict(data)
+    workspace.user_id = user.id
+    workspace.save()
+    db.session.commit()
+    return jsonify(workspace.to_dict()), 201
