@@ -3,6 +3,7 @@ from flask_cors import CORS
 
 from models import User, Workspace, db
 from routes.api import api
+from routes.test import test
 
 app = Flask(__name__)
 CORS(app)
@@ -12,6 +13,7 @@ app.config["SECRET_KEY"] = "secret_key"
 db.init_app(app)
 
 app.register_blueprint(api)
+app.register_blueprint(test)
 
 
 @app.route("/")
