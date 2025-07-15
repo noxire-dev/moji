@@ -1,6 +1,5 @@
 from flask import Flask
 from flask_cors import CORS
-
 from models import User, Workspace, db
 from routes.api import api
 from routes.test import test
