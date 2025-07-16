@@ -91,8 +91,12 @@ def create_notes():
         note = Note()
         note.from_dict(data)
         note.workspace_id = workspace.id
-        note.save()
-        return jsonify(note.to_dict()), 201
+        try:
+            note.save()
+            return jsonify(note.to_dict()), 201
+        except Exception as e:
+            print(f"Error saving note: {str(e)}")
+            return jsonify({"error": str(e)}), 500
     return jsonify({"error": "User not found or no input data provided"}), 400
 
 
@@ -115,8 +119,7 @@ def delete_note(note_id):
             workspace = user.workspaces[0]
             note = Note.query.filter_by(id=note_id, workspace_id=workspace.id).first()
             if note:
-                db.session.delete(note)
-                db.session.commit()
+                note.delete()
                 return jsonify({"message": "Note deleted successfully"})
             else:
                 return jsonify({"error": "Note not found"}), 404
@@ -143,6 +146,9 @@ def create_workspace():
     workspace = Workspace()
     workspace.from_dict(data)
     workspace.user_id = user.id
-    workspace.save()
-    db.session.commit()
-    return jsonify(workspace.to_dict()), 201
+    try:
+        workspace.save()
+        return jsonify(workspace.to_dict()), 201
+    except Exception as e:
+        print(f"Error saving workspace: {str(e)}")
+        return jsonify({"error": str(e)}), 500

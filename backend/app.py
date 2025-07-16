@@ -11,13 +11,33 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SECRET_KEY"] = "secret_key"
 db.init_app(app)
 
+moji_data = {
+    "name": "Moji",
+    "version": "0.0.1",
+    "backend_version": "0.0.1",
+    "frontend_version": "0.0.1",
+    "api_version": "v1",
+    "instance": "ldb0",
+    "author": "Noxire",
+    "license": "MIT",
+    "url": "https://github.com/Noxire/Moji",
+}
+moji_metadata = (
+    f"{moji_data['name']}@{moji_data['version']}"
+    f"-inst{moji_data['instance']}"
+    f"-fe{moji_data['frontend_version']}"
+    f"-be{moji_data['backend_version']}"
+    f"-api{moji_data['api_version']}"
+)
+
+
 app.register_blueprint(api)
 app.register_blueprint(test)
 
 
 @app.route("/")
 def hello():
-    return {"message": "Moji API is running!"}
+    return {"message": "Moji API is running!", "metadata": moji_metadata}
 
 
 if __name__ == "__main__":

@@ -90,7 +90,11 @@ class Note(BaseModel):
     def from_dict(self, data):
         self.title = data.get("title", "")
         self.content = data.get("content", "")
-        self.tags = data.get("tags", "")
+        tags_list = data.get("tags", [])
+        if isinstance(tags_list, list):
+            self.tags = ",".join(tags_list)
+        else:
+            self.tags = tags_list
         self.workspace_id = data.get("workspace_id", None)
         return self
 
