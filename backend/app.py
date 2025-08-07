@@ -3,6 +3,7 @@ from flask_cors import CORS
 from models import User, Workspace, db
 from routes.api import api
 from routes.test import test
+from routes.auth import auth
 
 app = Flask(__name__)
 CORS(app)
@@ -29,10 +30,12 @@ moji_metadata = (
     f"-be{moji_data['backend_version']}"
     f"-api{moji_data['api_version']}"
 )
+API_VERSION = "/v1"
 
 
-app.register_blueprint(api)
-app.register_blueprint(test)
+app.register_blueprint(api, url_prefix="/v1" + api.url_prefix)
+app.register_blueprint(auth, url_prefix=API_VERSION + auth.url_prefix)
+# app.register_blueprint(test, url_prefix=API_VERSION + test.url_prefix)
 
 
 @app.route("/")
