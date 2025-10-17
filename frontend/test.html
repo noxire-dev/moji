@@ -56,7 +56,7 @@
         const BASE = 'http://127.0.0.1:5000';
         const API_BASE = BASE + '/v1/api';
         // --- Helper Function ---
-        async function apiCall( endpoint, method = 'GET', body = null) {
+        async function apiCall(endpoint, method = 'GET', body = null) {
             const options = {
                 method: method,
                 headers: {
@@ -79,17 +79,17 @@
                 return null;
             }
         }
-        
+
         // --- Workspace Functions ---
         async function fetchWorkspaces() {
-            const data = await apiCall('/workspaces');
+            const data = await apiCall(endpoint='/workspaces');
             if (data) document.getElementById('workspacesOutput').textContent = JSON.stringify(data, null, 2);
         }
 
         async function createWorkspace() {
             const name = document.getElementById('newWorkspaceName').value;
             if (!name) { alert('Workspace name is required!'); return; }
-            const data = await apiCall('/workspaces', 'POST', { name: name, description: 'Created from tester' });
+            const data = await apiCall(endpoint='/workspaces', method='POST', body={ name: name, description: 'Created from tester' });
             if (data) {
                 document.getElementById('newWorkspaceName').value = '';
                 fetchWorkspaces();
@@ -98,14 +98,14 @@
 
         // --- Task Functions ---
         async function fetchTasks() {
-            const data = await apiCall('/tasks');
+            const data = await apiCall(endpoint='/tasks');
             if (data) document.getElementById('tasksOutput').textContent = JSON.stringify(data, null, 2);
         }
 
         async function createTask() {
             const content = document.getElementById('newTaskContent').value;
             if (!content) { alert('Task content is required!'); return; }
-            const data = await apiCall('/tasks', 'POST', { content: content, priority: 1 }); // Default priority to 1 (medium)
+            const data = await apiCall(endpoint='/tasks', method='POST', body={ content: content, priority: 1 }); // Default priority to 1 (medium)
             if (data) {
                 document.getElementById('newTaskContent').value = '';
                 fetchTasks();
@@ -114,7 +114,7 @@
 
         // --- Note Functions ---
         async function fetchNotes() {
-            const data = await apiCall('/notes');
+            const data = await apiCall(endpoint='/notes');
             if (data) document.getElementById('notesOutput').textContent = JSON.stringify(data, null, 2);
         }
 
@@ -125,7 +125,7 @@
 
             if (!title || !content) { alert('Note title and content are required!'); return; }
 
-            const data = await apiCall('/notes', 'POST', { title: title, content: content, tags: tags });
+            const data = await apiCall(endpoint='/notes', method='POST', body={ title: title, content: content, tags: tags });
             if (data) {
                 document.getElementById('newNoteTitle').value = '';
                 document.getElementById('newNoteContent').value = '';

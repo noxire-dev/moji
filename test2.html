@@ -82,6 +82,17 @@
             /* Typography */
             --font-display: 'SF Pro Display', -apple-system, BlinkMacSystemFont, Inter, sans-serif;
             --font-text: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+            /* Shape & spacing tokens */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 24px;
+            --focus-ring: 0 0 0 2px var(--primary), 0 8px 24px var(--command-shadow);
         }
 
         html[data-theme="light"] {
@@ -387,6 +398,12 @@
             min-height: 100vh;
             padding: 2rem;
             transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Centered content container for improved readability */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .main-content.sidebar-collapsed {
@@ -740,6 +757,12 @@
             color: var(--fg);
         }
 
+        .suggestion-item.active {
+            background: var(--hover-bg);
+            color: var(--fg);
+            border: 1px solid var(--glass-border);
+        }
+
         .suggestion-icon {
             width: 14px;
             height: 14px;
@@ -862,12 +885,41 @@
         .sidebar::-webkit-scrollbar-thumb:hover {
             background: var(--primary);
         }
+
+        /* Accessibility: visible focus styles */
+        .nav-item:focus-visible,
+        .workspace-tab:focus-visible,
+        .theme-toggle:focus-visible,
+        .mobile-toggle:focus-visible,
+        .task-checkbox:focus-visible,
+        .note-card:focus-visible,
+        .command-input:focus-visible,
+        .logo:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+            border-color: var(--primary);
+        }
+
+        /* Make focused list items visually prominent when child receives focus */
+        .task-item:focus-within,
+        .content-section:focus-within {
+            box-shadow: 0 8px 32px var(--command-shadow);
+        }
+
+        /* Reduced motion support */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+                scroll-behavior: auto !important;
+            }
+        }
     </style>
 </head>
 
 <body>
     <!-- Mobile Toggle -->
-    <button class="mobile-toggle btn" id="mobileToggle">
+    <button class="mobile-toggle btn" id="mobileToggle" aria-label="Toggle sidebar" aria-controls="sidebar" aria-expanded="true">
         <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
             <path fill-rule="evenodd"
                 d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z" />
@@ -884,7 +936,7 @@
             </div>
 
             <!-- Navigation -->
-            <div class="nav-section">
+            <div class="nav-section" role="navigation" aria-label="Primary">
                 <div class="nav-title">Overview</div>
                 <a href="#" class="nav-item active">
                     <svg class="icon" fill="currentColor" viewBox="0 0 20 20">
@@ -969,6 +1021,7 @@
 
     <!-- Main Content -->
     <div class="main-content" id="mainContent">
+        <div class="main-container">
         <div class="workspace-grid">
             <!-- Tasks Section -->
             <div class="content-section fade-in">
@@ -1095,6 +1148,7 @@
                 </div>
             </div>
         </div>
+        </div>
     </div>
 
     <!-- Enhanced Command Bar -->
@@ -1145,14 +1199,18 @@
 
         // Theme Management
         function initializeTheme() {
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            app.currentTheme = savedTheme;
+            const storedTheme = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const initialTheme = storedTheme || (prefersDark ? 'dark' : 'light');
+            app.currentTheme = initialTheme;
             document.documentElement.setAttribute('data-theme', app.currentTheme);
+            console.log('[theme] initialized:', app.currentTheme, '| stored:', storedTheme, '| prefersDark:', prefersDark);
 
             document.getElementById('themeToggle').addEventListener('click', function () {
                 app.currentTheme = app.currentTheme === 'light' ? 'dark' : 'light';
                 document.documentElement.setAttribute('data-theme', app.currentTheme);
                 localStorage.setItem('theme', app.currentTheme);
+                console.log('[theme] toggled to:', app.currentTheme);
             });
         }
 
@@ -1169,17 +1227,22 @@
                     sidebar.classList.add('open');
                     mainContent.classList.remove('sidebar-collapsed');
                     commandBar.classList.remove('sidebar-collapsed');
+                    sidebar.setAttribute('aria-hidden', 'false');
+                    mobileToggle.setAttribute('aria-expanded', 'true');
                 } else {
                     sidebar.classList.add('collapsed');
                     sidebar.classList.remove('open');
                     mainContent.classList.add('sidebar-collapsed');
                     commandBar.classList.add('sidebar-collapsed');
+                    sidebar.setAttribute('aria-hidden', 'true');
+                    mobileToggle.setAttribute('aria-expanded', 'false');
                 }
             }
 
             mobileToggle.addEventListener('click', function () {
                 app.sidebarOpen = !app.sidebarOpen;
                 updateSidebar();
+                console.log('[sidebar] toggled. open =', app.sidebarOpen);
             });
 
             window.addEventListener('resize', function () {
@@ -1191,6 +1254,9 @@
                 updateSidebar();
             });
 
+            // Initialize ARIA state
+            sidebar.setAttribute('aria-hidden', String(!app.sidebarOpen));
+            mobileToggle.setAttribute('aria-expanded', String(app.sidebarOpen));
             updateSidebar();
         }
 
@@ -1332,6 +1398,7 @@
                 checkbox.classList.remove('checked');
                 checkbox.innerHTML = '';
                 taskItem.style.opacity = '1';
+                checkbox.setAttribute('aria-checked', 'false');
             } else {
                 checkbox.classList.add('checked');
                 checkbox.innerHTML = `
@@ -1340,16 +1407,41 @@
                     </svg>
                 `;
                 taskItem.style.opacity = '0.6';
+                checkbox.setAttribute('aria-checked', 'true');
             }
+            const text = taskItem.querySelector('.task-text')?.textContent || '';
+            console.log('[task] toggled:', text, '| checked =', !isChecked);
         }
 
         // Initialize Interactions
         function initializeInteractions() {
+            // Workspace tabs: keyboard accessible
             document.querySelectorAll('.workspace-tab').forEach(tab => {
+                tab.setAttribute('tabindex', '0');
+                tab.setAttribute('role', 'button');
                 tab.addEventListener('click', function () {
                     document.querySelectorAll('.workspace-tab').forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
                     console.log('Switched to workspace:', this.querySelector('.workspace-name').textContent);
+                });
+                tab.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            });
+
+            // Task checkboxes: keyboard accessible + ARIA
+            document.querySelectorAll('.task-checkbox').forEach(cb => {
+                cb.setAttribute('tabindex', '0');
+                cb.setAttribute('role', 'checkbox');
+                cb.setAttribute('aria-checked', cb.classList.contains('checked') ? 'true' : 'false');
+                cb.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        toggleTask(this);
+                    }
                 });
             });
         }

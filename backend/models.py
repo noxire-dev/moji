@@ -22,10 +22,14 @@ class BaseModel(db.Model):
         }
 
     def update(self, data):
-        for field, value in data.items():
-            setattr(self, field, value)
-        db.session.commit()
-        return self
+        try:
+            for field, value in data.items():
+                setattr(self, field, value)
+            db.session.commit()
+            return self
+        except Exception as e:
+            print(f"Error in BaseModel.update: {e}")
+            return None
 
     def delete(self):
         db.session.delete(self)
@@ -79,13 +83,17 @@ class Note(BaseModel):
     workspace = db.relationship("Workspace", back_populates="notes")
 
     def to_dict(self):
-        base_dict = super().to_dict()
-        return {
+        try:
+            base_dict = super().to_dict()
+            return {
             **base_dict,
             "title": self.title,
             "content": self.content,
-            "tags": self.tags,
-        }
+                "tags": self.tags,
+            }
+        except Exception as e:
+            print(f"Error in Note.to_dict: {e}")
+            return {}
 
     def from_dict(self, data):
         self.title = data.get("title", "")

@@ -23,6 +23,7 @@ moji_data = {
     "license": "MIT",
     "url": "https://github.com/Noxire/Moji",
 }
+
 moji_metadata = (
     f"{moji_data['name']}@{moji_data['version']}"
     f"-inst{moji_data['instance']}"
@@ -41,6 +42,10 @@ app.register_blueprint(auth, url_prefix=API_VERSION + auth.url_prefix)
 @app.route("/")
 def hello():
     return {"message": "Moji API is running!", "metadata": moji_metadata}
+
+@app.route("/metadata")
+def metadata():
+    return {"metadata": moji_metadata}
 
 
 if __name__ == "__main__":
