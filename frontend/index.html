@@ -3,89 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Moji - Your Universal Workspace</title>
+    <title>Moji</title>
     <style>
-        /* Pastel Dark Theme Variables */
-        :root {
-            --bg-primary: #1a1625;
-            --bg-secondary: #221c2e;
-            --bg-tertiary: #2a2437;
-            --bg-card: rgba(42, 36, 55, 0.6);
-            --bg-hover: rgba(168, 162, 255, 0.1);
-
-            --text-primary: #e6e4f0;
-            --text-secondary: #b8b4c8;
-            --text-tertiary: #8a8599;
-
-            --accent-purple: #a8a2ff;
-            --accent-pink: #f5a3d0;
-            --accent-blue: #a3d5ff;
-            --accent-green: #b5e7a0;
-            --accent-peach: #ffc9a3;
-
-            --border-subtle: rgba(230, 228, 240, 0.08);
-            --border-focus: rgba(168, 162, 255, 0.3);
-
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
-            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
-
-            --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 16px;
-
-            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Reset & Base */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-primary: #16161e;
+            --bg-secondary: #1a1a22;
+            --bg-tertiary: #2a2437;
+            --text-primary: #dcd7ba;
+            --text-secondary: #9cabca;
+            --text-tertiary: #727169;
+            --border: rgba(220, 215, 186, 0.08);
+            --accent-purple: #7e9cd8;
+            --accent-green: #76946a;
+            --accent-orange: #e98a5b;
+            --accent-red: #c34043;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.6;
-            overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
         }
 
         /* Sidebar */
         .sidebar {
             position: fixed;
-            top: 0;
             left: 0;
-            width: 260px;
+            top: 0;
+            width: 240px;
             height: 100vh;
             background: var(--bg-secondary);
-            border-right: 1px solid var(--border-subtle);
+            border-right: 1px solid var(--border);
             padding: 1.5rem;
             overflow-y: auto;
-            z-index: 100;
-            transition: transform var(--transition-base);
-        }
-
-        .sidebar.hidden {
-            transform: translateX(-100%);
         }
 
         .logo {
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+            color: var(--accent-purple);
             margin-bottom: 0.5rem;
         }
 
         .subtitle {
-            font-size: 0.875rem;
+            font-size: 0.8rem;
             color: var(--text-tertiary);
             margin-bottom: 2rem;
         }
@@ -95,223 +64,157 @@
         }
 
         .nav-title {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.5px;
             color: var(--text-tertiary);
             margin-bottom: 0.75rem;
         }
 
         .nav-item {
             padding: 0.75rem 1rem;
-            border-radius: var(--radius-md);
+            border-radius: 8px;
             color: var(--text-secondary);
             cursor: pointer;
-            transition: all var(--transition-fast);
             margin-bottom: 0.25rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+            transition: all 0.2s;
         }
 
         .nav-item:hover {
-            background: var(--bg-hover);
+            background: rgba(126, 156, 216, 0.1);
             color: var(--text-primary);
-            transform: translateX(2px);
         }
 
         .nav-item.active {
-            background: linear-gradient(135deg, rgba(168, 162, 255, 0.2), rgba(245, 163, 208, 0.2));
-            color: var(--text-primary);
-            border: 1px solid var(--border-focus);
+            background: var(--accent-purple);
+            color: white;
         }
 
         .workspace-item {
-            padding: 0.875rem 1rem;
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             margin-bottom: 0.5rem;
             cursor: pointer;
-            transition: all var(--transition-fast);
+            transition: all 0.2s;
         }
 
         .workspace-item:hover {
-            background: var(--bg-hover);
-            border-color: var(--border-focus);
-            transform: translateY(-2px);
-        }
-
-        .workspace-item.active {
             border-color: var(--accent-purple);
-            box-shadow: 0 0 0 2px rgba(168, 162, 255, 0.2);
         }
 
         .workspace-name {
             font-weight: 600;
-            color: var(--text-primary);
+            font-size: 0.85rem;
             margin-bottom: 0.25rem;
         }
 
         .workspace-meta {
-            font-size: 0.8rem;
+            font-size: 0.7rem;
             color: var(--text-tertiary);
         }
 
-        /* Main Content */
+        /* Main */
         .main {
-            margin-left: 260px;
+            margin-left: 240px;
             padding: 2rem;
-            min-height: 100vh;
-            transition: margin-left var(--transition-base);
-        }
-
-        .main.full-width {
-            margin-left: 0;
+            max-width: 1400px;
+            padding-bottom: 8rem;
         }
 
         .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
             margin-bottom: 2rem;
         }
 
         .header h1 {
             font-size: 2rem;
             font-weight: 700;
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .btn {
-            padding: 0.75rem 1.5rem;
-            background: var(--bg-tertiary);
             color: var(--text-primary);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            font-size: 0.875rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all var(--transition-fast);
         }
 
-        .btn:hover {
-            background: var(--bg-hover);
-            border-color: var(--accent-purple);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
-            border: none;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* Grid Layout */
+        /* Grid */
         .grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 1.5rem;
-            margin-bottom: 6rem;
         }
 
         .card {
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
             padding: 1.5rem;
-            transition: all var(--transition-base);
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--border-focus);
         }
 
         .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             padding-bottom: 1rem;
-            border-bottom: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border);
         }
 
         .card-title {
-            font-size: 1.25rem;
+            font-size: 1.1rem;
             font-weight: 600;
         }
 
         .badge {
-            padding: 0.25rem 0.75rem;
             background: var(--accent-purple);
             color: white;
+            padding: 0.25rem 0.75rem;
             border-radius: 12px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
         }
 
         /* Tasks */
         .task {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            padding: 1rem;
-            margin-bottom: 0.75rem;
-            transition: all var(--transition-fast);
             display: flex;
             gap: 0.875rem;
-            align-items: flex-start;
+            padding: 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
         }
 
         .task:hover {
-            background: var(--bg-hover);
             border-color: var(--accent-purple);
-            transform: translateX(4px);
         }
 
         .checkbox {
-            width: 20px;
-            height: 20px;
-            border: 2px solid var(--border-focus);
-            border-radius: 6px;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
             cursor: pointer;
             flex-shrink: 0;
             margin-top: 2px;
-            transition: all var(--transition-fast);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: all 0.2s;
         }
 
         .checkbox:hover {
             border-color: var(--accent-purple);
-            transform: scale(1.1);
         }
 
         .checkbox.checked {
             background: var(--accent-green);
             border-color: var(--accent-green);
+            position: relative;
         }
 
         .checkbox.checked::after {
             content: '✓';
+            position: absolute;
             color: white;
-            font-size: 0.875rem;
-            font-weight: 700;
+            font-size: 12px;
+            top: -2px;
+            left: 2px;
         }
 
         .task-content {
@@ -319,7 +222,6 @@
         }
 
         .task-text {
-            color: var(--text-primary);
             margin-bottom: 0.5rem;
         }
 
@@ -338,41 +240,37 @@
         .priority {
             padding: 0.125rem 0.5rem;
             border-radius: 6px;
-            font-weight: 600;
             font-size: 0.7rem;
+            font-weight: 600;
         }
 
-        .priority-high { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
-        .priority-medium { background: rgba(255, 201, 163, 0.2); color: var(--accent-peach); }
-        .priority-low { background: rgba(181, 231, 160, 0.2); color: var(--accent-green); }
+        .priority-high { background: rgba(195, 64, 67, 0.2); color: var(--accent-red); }
+        .priority-medium { background: rgba(233, 138, 91, 0.2); color: var(--accent-orange); }
+        .priority-low { background: rgba(118, 148, 106, 0.2); color: var(--accent-green); }
 
         /* Notes */
         .note {
+            padding: 1rem;
             background: var(--bg-tertiary);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-            transition: all var(--transition-fast);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
             cursor: pointer;
+            transition: all 0.2s;
         }
 
         .note:hover {
-            background: var(--bg-hover);
-            border-color: var(--accent-blue);
-            transform: translateY(-2px);
+            border-color: var(--accent-purple);
         }
 
         .note-title {
             font-weight: 600;
-            color: var(--text-primary);
             margin-bottom: 0.5rem;
         }
 
         .note-content {
             color: var(--text-secondary);
             font-size: 0.9rem;
-            line-height: 1.6;
             margin-bottom: 0.75rem;
         }
 
@@ -383,155 +281,89 @@
         }
 
         .tag {
-            padding: 0.25rem 0.75rem;
-            background: var(--accent-blue);
+            background: var(--accent-purple);
             color: white;
+            padding: 0.25rem 0.75rem;
             border-radius: 12px;
             font-size: 0.7rem;
             font-weight: 600;
         }
 
-        /* Modal */
-        .modal {
+        /* Command Bar */
+        .command-bar {
             position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            animation: fadeIn var(--transition-base);
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 240px - 4rem);
+            max-width: 600px;
+            z-index: 100;
         }
 
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
+        .command-suggestions {
             background: var(--bg-secondary);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg);
-            padding: 2rem;
-            max-width: 500px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            animation: slideUp var(--transition-base);
-        }
-
-        .modal-header {
-            margin-bottom: 1.5rem;
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+            border: 1px solid var(--border);
+            border-radius: 12px;
             margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            display: none;
         }
 
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        .form-label {
+        .command-suggestions.show {
             display: block;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
         }
 
-        .form-input,
-        .form-textarea {
-            width: 100%;
-            padding: 0.875rem;
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            font-family: inherit;
-            font-size: 0.9rem;
-            transition: all var(--transition-fast);
+        .suggestion-item {
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.25rem;
         }
 
-        .form-input:focus,
-        .form-textarea:focus {
-            outline: none;
+        .suggestion-item:hover {
+            background: rgba(126, 156, 216, 0.1);
+        }
+
+        .command-input-container {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 0.25rem;
+            transition: all 0.2s;
+        }
+
+        .command-input-container:focus-within {
             border-color: var(--accent-purple);
-            box-shadow: 0 0 0 3px rgba(168, 162, 255, 0.1);
+            box-shadow: 0 0 0 2px rgba(126, 156, 216, 0.2);
         }
 
-        .form-textarea {
-            resize: vertical;
-            min-height: 100px;
+        .command-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 1rem 1.25rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            outline: none;
+            resize: none;
+            font-family: inherit;
         }
 
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1.5rem;
+        .command-input::placeholder {
+            color: var(--text-tertiary);
         }
 
-        .form-actions .btn {
-            flex: 1;
-        }
-
-        /* Loading */
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid var(--border-subtle);
-            border-top-color: var(--accent-purple);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        /* Animations */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Mobile */
-        @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-
-            .sidebar.active {
-                transform: translateX(0);
-            }
-
-            .main {
-                margin-left: 0;
-            }
-
-            .grid {
-                grid-template-columns: 1fr;
-            }
+        /* Empty State */
+        .empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-tertiary);
         }
 
         /* Scrollbar */
         ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 6px;
         }
 
         ::-webkit-scrollbar-track {
@@ -540,47 +372,39 @@
 
         ::-webkit-scrollbar-thumb {
             background: var(--bg-tertiary);
-            border-radius: 4px;
+            border-radius: 3px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
             background: var(--accent-purple);
         }
 
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            padding: 3rem 1rem;
-            color: var(--text-tertiary);
-        }
-
-        .empty-state-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .command-bar {
+                width: calc(100% - 2rem);
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
+    <div class="sidebar">
         <div class="logo">Moji</div>
         <div class="subtitle">Universal Workspace</div>
 
         <div class="nav-section">
             <div class="nav-title">Navigation</div>
-            <div class="nav-item active" data-view="dashboard">
-                <span>📊</span>
-                <span>Dashboard</span>
-            </div>
-            <div class="nav-item" data-view="tasks">
-                <span>✓</span>
-                <span>All Tasks</span>
-            </div>
-            <div class="nav-item" data-view="notes">
-                <span>📝</span>
-                <span>All Notes</span>
-            </div>
+            <div class="nav-item active">Dashboard</div>
+            <div class="nav-item">All Tasks</div>
+            <div class="nav-item">All Notes</div>
         </div>
 
         <div class="nav-section">
@@ -589,31 +413,23 @@
         </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main" id="main">
+    <div class="main">
         <div class="header">
-            <h1 id="pageTitle">Dashboard</h1>
-            <div style="display: flex; gap: 1rem;">
-                <button class="btn" onclick="app.openModal('workspace')">+ Workspace</button>
-                <button class="btn" onclick="app.openModal('task')">+ Task</button>
-                <button class="btn" onclick="app.openModal('note')">+ Note</button>
-            </div>
+            <h1>Dashboard</h1>
         </div>
 
-        <div class="grid" id="content">
-            <!-- Tasks Card -->
+        <div class="grid">
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Recent Tasks</h2>
+                    <h2 class="card-title">Tasks</h2>
                     <span class="badge" id="taskCount">0</span>
                 </div>
                 <div id="tasksList"></div>
             </div>
 
-            <!-- Notes Card -->
             <div class="card">
                 <div class="card-header">
-                    <h2 class="card-title">Recent Notes</h2>
+                    <h2 class="card-title">Notes</h2>
                     <span class="badge" id="noteCount">0</span>
                 </div>
                 <div id="notesList"></div>
@@ -621,136 +437,58 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    <!-- Workspace Modal -->
-    <div class="modal" id="workspaceModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Create Workspace</h3>
-            </div>
-            <form onsubmit="app.createWorkspace(event)">
-                <div class="form-group">
-                    <label class="form-label">Name</label>
-                    <input type="text" class="form-input" id="workspaceName" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Description</label>
-                    <textarea class="form-textarea" id="workspaceDescription"></textarea>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn" onclick="app.closeModal('workspace')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
+    <div class="command-bar">
+        <div class="command-suggestions" id="suggestions">
+            <div class="suggestion-item" onclick="app.insertCommand('/task ')">+ Add task</div>
+            <div class="suggestion-item" onclick="app.insertCommand('/note ')">+ Add note</div>
+            <div class="suggestion-item" onclick="app.insertCommand('/workspace ')">+ Add workspace</div>
         </div>
-    </div>
-
-    <!-- Task Modal -->
-    <div class="modal" id="taskModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Create Task</h3>
-            </div>
-            <form onsubmit="app.createTask(event)">
-                <div class="form-group">
-                    <label class="form-label">Task</label>
-                    <input type="text" class="form-input" id="taskContent" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Priority</label>
-                    <select class="form-input" id="taskPriority">
-                        <option value="0">Low</option>
-                        <option value="1" selected>Medium</option>
-                        <option value="2">High</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn" onclick="app.closeModal('task')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Note Modal -->
-    <div class="modal" id="noteModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Create Note</h3>
-            </div>
-            <form onsubmit="app.createNote(event)">
-                <div class="form-group">
-                    <label class="form-label">Title</label>
-                    <input type="text" class="form-input" id="noteTitle" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Content</label>
-                    <textarea class="form-textarea" id="noteContent" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Tags (comma-separated)</label>
-                    <input type="text" class="form-input" id="noteTags" placeholder="work, ideas, project">
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn" onclick="app.closeModal('note')">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
-                </div>
-            </form>
+        <div class="command-input-container">
+            <textarea
+                id="commandInput"
+                class="command-input"
+                rows="1"
+                placeholder="Type / for commands or just start typing..."
+            ></textarea>
         </div>
     </div>
 
     <script>
-        // App State & API
         const app = {
-            API_BASE: 'http://127.0.0.1:5000/v1/api',
-            state: {
-                workspaces: [],
-                tasks: [],
-                notes: [],
-                currentView: 'dashboard'
-            },
+            API: 'http://127.0.0.1:5000/v1/api',
+            state: { workspaces: [], tasks: [], notes: [] },
 
-            // Initialize
             async init() {
-                await this.loadAll();
-                this.setupEventListeners();
+                await this.load();
+                this.setupCommands();
             },
 
-            // API Calls
-            async api(endpoint, method = 'GET', body = null) {
+            async api(path, method = 'GET', body = null) {
                 try {
-                    const options = {
-                        method,
-                        headers: { 'Content-Type': 'application/json' }
-                    };
-                    if (body) options.body = JSON.stringify(body);
-
-                    const response = await fetch(`${this.API_BASE}${endpoint}`, options);
-                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                    return await response.json();
-                } catch (error) {
-                    console.error('API Error:', error);
+                    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+                    if (body) opts.body = JSON.stringify(body);
+                    const res = await fetch(this.API + path, opts);
+                    return res.ok ? await res.json() : null;
+                } catch (e) {
+                    console.error('API error:', e);
                     return null;
                 }
             },
 
-            // Load Data
-            async loadAll() {
+            async load() {
                 const [workspaces, tasks, notes] = await Promise.all([
                     this.api('/workspaces'),
                     this.api('/tasks'),
                     this.api('/notes')
                 ]);
 
-                // API returns arrays directly, not wrapped in objects
-                if (workspaces && Array.isArray(workspaces)) this.state.workspaces = workspaces;
-                if (tasks && Array.isArray(tasks)) this.state.tasks = tasks;
-                if (notes && Array.isArray(notes)) this.state.notes = notes;
+                if (Array.isArray(workspaces)) this.state.workspaces = workspaces;
+                if (Array.isArray(tasks)) this.state.tasks = tasks;
+                if (Array.isArray(notes)) this.state.notes = notes;
 
                 this.render();
             },
 
-            // Render
             render() {
                 this.renderWorkspaces();
                 this.renderTasks();
@@ -758,44 +496,43 @@
             },
 
             renderWorkspaces() {
-                const list = document.getElementById('workspacesList');
+                const el = document.getElementById('workspacesList');
                 if (this.state.workspaces.length === 0) {
-                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📁</div><p>No workspaces yet</p></div>';
+                    el.innerHTML = '<div class="empty">No workspaces</div>';
                     return;
                 }
-
-                list.innerHTML = this.state.workspaces.map(ws => `
-                    <div class="workspace-item" onclick="app.selectWorkspace(${ws.id})">
-                        <div class="workspace-name">${ws.name}</div>
-                        <div class="workspace-meta">${ws.description || 'No description'}</div>
+                el.innerHTML = this.state.workspaces.map(w => `
+                    <div class="workspace-item">
+                        <div class="workspace-name">${w.name}</div>
+                        <div class="workspace-meta">${w.description || ''}</div>
                     </div>
                 `).join('');
             },
 
             renderTasks() {
-                const list = document.getElementById('tasksList');
+                const el = document.getElementById('tasksList');
                 const count = document.getElementById('taskCount');
-                const tasks = this.state.tasks.slice(0, 5); // Show recent 5
+                const tasks = this.state.tasks.slice(0, 5);
 
                 count.textContent = this.state.tasks.length;
 
                 if (tasks.length === 0) {
-                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div><p>No tasks yet</p></div>';
+                    el.innerHTML = '<div class="empty">No tasks</div>';
                     return;
                 }
 
-                list.innerHTML = tasks.map(task => {
-                    const priority = ['low', 'medium', 'high'][task.priority || 1];
-                    const priorityLabel = ['Low', 'Medium', 'High'][task.priority || 1];
+                el.innerHTML = tasks.map(t => {
+                    const p = ['low', 'medium', 'high'][t.priority || 1];
+                    const pl = ['Low', 'Medium', 'High'][t.priority || 1];
                     return `
-                        <div class="task ${task.completed ? 'completed' : ''}">
-                            <div class="checkbox ${task.completed ? 'checked' : ''}"
-                                 onclick="app.toggleTask(${task.id}, ${!task.completed})"></div>
+                        <div class="task ${t.completed ? 'completed' : ''}">
+                            <div class="checkbox ${t.completed ? 'checked' : ''}"
+                                 onclick="app.toggleTask(${t.id}, ${!t.completed})"></div>
                             <div class="task-content">
-                                <div class="task-text">${task.content}</div>
+                                <div class="task-text">${t.content}</div>
                                 <div class="task-meta">
-                                    <span class="priority priority-${priority}">${priorityLabel}</span>
-                                    <span>${new Date(task.created_at).toLocaleDateString()}</span>
+                                    <span class="priority priority-${p}">${pl}</span>
+                                    <span>${new Date(t.created_at).toLocaleDateString()}</span>
                                 </div>
                             </div>
                         </div>
@@ -804,113 +541,101 @@
             },
 
             renderNotes() {
-                const list = document.getElementById('notesList');
+                const el = document.getElementById('notesList');
                 const count = document.getElementById('noteCount');
-                const notes = this.state.notes.slice(0, 5); // Show recent 5
+                const notes = this.state.notes.slice(0, 5);
 
                 count.textContent = this.state.notes.length;
 
                 if (notes.length === 0) {
-                    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>No notes yet</p></div>';
+                    el.innerHTML = '<div class="empty">No notes</div>';
                     return;
                 }
 
-                list.innerHTML = notes.map(note => `
+                el.innerHTML = notes.map(n => `
                     <div class="note">
-                        <div class="note-title">${note.title}</div>
-                        <div class="note-content">${note.content.substring(0, 150)}${note.content.length > 150 ? '...' : ''}</div>
-                        ${note.tags && note.tags.length > 0 ? `
+                        <div class="note-title">${n.title}</div>
+                        <div class="note-content">${n.content.substring(0, 120)}...</div>
+                        ${n.tags && n.tags.length > 0 ? `
                             <div class="note-tags">
-                                ${note.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                                ${n.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
                             </div>
                         ` : ''}
                     </div>
                 `).join('');
             },
 
-            // Actions
-            async createWorkspace(e) {
-                e.preventDefault();
-                const name = document.getElementById('workspaceName').value;
-                const description = document.getElementById('workspaceDescription').value;
-
-                const result = await this.api('/workspaces', 'POST', { name, description });
-                if (result) {
-                    await this.loadAll();
-                    this.closeModal('workspace');
-                    e.target.reset();
-                }
-            },
-
-            async createTask(e) {
-                e.preventDefault();
-                const content = document.getElementById('taskContent').value;
-                const priority = parseInt(document.getElementById('taskPriority').value);
-
-                const result = await this.api('/tasks', 'POST', { content, priority });
-                if (result) {
-                    await this.loadAll();
-                    this.closeModal('task');
-                    e.target.reset();
-                }
-            },
-
-            async createNote(e) {
-                e.preventDefault();
-                const title = document.getElementById('noteTitle').value;
-                const content = document.getElementById('noteContent').value;
-                const tagsInput = document.getElementById('noteTags').value;
-                const tags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
-
-                const result = await this.api('/notes', 'POST', { title, content, tags });
-                if (result) {
-                    await this.loadAll();
-                    this.closeModal('note');
-                    e.target.reset();
-                }
-            },
-
             async toggleTask(id, completed) {
                 await this.api(`/tasks/${id}`, 'PUT', { completed });
-                await this.loadAll();
+                await this.load();
             },
 
-            selectWorkspace(id) {
-                console.log('Selected workspace:', id);
-            },
+            setupCommands() {
+                const input = document.getElementById('commandInput');
+                const suggestions = document.getElementById('suggestions');
 
-            // Modal Control
-            openModal(type) {
-                document.getElementById(`${type}Modal`).classList.add('active');
-            },
+                input.addEventListener('input', (e) => {
+                    input.style.height = 'auto';
+                    input.style.height = input.scrollHeight + 'px';
 
-            closeModal(type) {
-                document.getElementById(`${type}Modal`).classList.remove('active');
-            },
-
-            // Event Listeners
-            setupEventListeners() {
-                // Close modal on outside click
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.addEventListener('click', (e) => {
-                        if (e.target === modal) {
-                            modal.classList.remove('active');
-                        }
-                    });
-                });
-
-                // ESC to close modals
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') {
-                        document.querySelectorAll('.modal.active').forEach(modal => {
-                            modal.classList.remove('active');
-                        });
+                    if (e.target.value.startsWith('/')) {
+                        suggestions.classList.add('show');
+                    } else {
+                        suggestions.classList.remove('show');
                     }
                 });
+
+                input.addEventListener('keydown', async (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        await this.processCommand(input.value.trim());
+                        input.value = '';
+                        input.style.height = 'auto';
+                        suggestions.classList.remove('show');
+                    }
+                    if (e.key === 'Escape') {
+                        suggestions.classList.remove('show');
+                    }
+                });
+
+                input.addEventListener('blur', () => {
+                    setTimeout(() => suggestions.classList.remove('show'), 150);
+                });
+            },
+
+            insertCommand(cmd) {
+                const input = document.getElementById('commandInput');
+                input.value = cmd;
+                input.focus();
+            },
+
+            async processCommand(text) {
+                if (!text) return;
+
+                if (text.startsWith('/task ')) {
+                    const content = text.slice(6);
+                    await this.api('/tasks', 'POST', { content, priority: 1 });
+                    await this.load();
+                } else if (text.startsWith('/note ')) {
+                    const content = text.slice(6);
+                    const title = content.split('\n')[0] || 'Quick note';
+                    await this.api('/notes', 'POST', { title, content, tags: [] });
+                    await this.load();
+                } else if (text.startsWith('/workspace ')) {
+                    const name = text.slice(11);
+                    await this.api('/workspaces', 'POST', { name, description: '' });
+                    await this.load();
+                } else {
+                    await this.api('/notes', 'POST', {
+                        title: text.substring(0, 50),
+                        content: text,
+                        tags: []
+                    });
+                    await this.load();
+                }
             }
         };
 
-        // Initialize on load
         document.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
