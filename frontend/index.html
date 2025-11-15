@@ -10,6 +10,7 @@
             /* Colors */
             --bg: #16161e;
             --bg-secondary: #1a1a22;
+            --bg-tertiary: #2a2437;
             --sidebar-bg: rgba(22, 22, 30, 0.9);
             --card-bg: rgba(42, 42, 54, 0.7);
             --glass-bg: rgba(42, 42, 54, 0.5);
@@ -472,6 +473,12 @@
             animation: slideUp 0.3s;
         }
 
+        .modal-content.large {
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
@@ -531,6 +538,12 @@
         .form-textarea {
             resize: vertical;
             min-height: 100px;
+        }
+
+        .form-textarea.large {
+            min-height: 300px;
+            font-size: 0.95rem;
+            line-height: 1.7;
         }
 
         .form-actions {
@@ -787,7 +800,7 @@
     <div class="modal" id="taskModal">
         <div class="modal-content">
             <h3 class="modal-title">Add Task</h3>
-            <form onsubmit="app.createTask(event)">
+            <form onsubmit="app.tasks.create(event)">
                 <div class="form-group">
                     <label class="form-label">Task</label>
                     <input type="text" class="form-input" id="taskInput" required autofocus>
@@ -808,11 +821,11 @@
         </div>
     </div>
 
-    <!-- Note Modal -->
+    <!-- Note Modal (Add) -->
     <div class="modal" id="noteModal">
         <div class="modal-content">
             <h3 class="modal-title">Add Note</h3>
-            <form onsubmit="app.createNote(event)">
+            <form onsubmit="app.notes.create(event)">
                 <div class="form-group">
                     <label class="form-label">Title</label>
                     <input type="text" class="form-input" id="noteTitle" required autofocus>
@@ -833,335 +846,46 @@
         </div>
     </div>
 
+    <!-- Note Viewer/Editor Modal -->
+    <div class="modal" id="noteViewModal">
+        <div class="modal-content large">
+            <h3 class="modal-title" id="noteViewTitle"></h3>
+            <form onsubmit="app.notes.update(event)">
+                <input type="hidden" id="noteEditId">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="noteEditTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-textarea large" id="noteEditContent" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tags (comma-separated)</label>
+                    <input type="text" class="form-input" id="noteEditTags" placeholder="work, ideas">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('noteView')">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <div class="command-bar">
         <div class="command-suggestions" id="suggestions">
-            <div class="suggestion-item" onclick="app.insertCommand('/task ')">+ Add task</div>
-            <div class="suggestion-item" onclick="app.insertCommand('/note ')">+ Add note</div>
-            <div class="suggestion-item" onclick="app.insertCommand('/workspace ')">+ Add workspace</div>
+            <div class="suggestion-item" onclick="app.commands.insert('/task ')">+ Add task</div>
+            <div class="suggestion-item" onclick="app.commands.insert('/note ')">+ Add note</div>
+            <div class="suggestion-item" onclick="app.commands.insert('/workspace ')">+ Add workspace</div>
         </div>
         <div class="command-input-container">
             <textarea id="commandInput" class="command-input" rows="1" placeholder="Type / for commands or Cmd+K..."></textarea>
         </div>
     </div>
 
-    <script>
-        const app = {
-            API: 'http://127.0.0.1:5000/v1/api',
-            state: { workspaces: [], tasks: [], notes: [], theme: 'purple' },
-
-            async init() {
-                this.loadTheme();
-                await this.load();
-                this.setupCommands();
-                this.setupThemeSelector();
-                this.setupKeyboardShortcuts();
-            },
-
-            async api(path, method = 'GET', body = null) {
-                try {
-                    const opts = { method, headers: { 'Content-Type': 'application/json' } };
-                    if (body) opts.body = JSON.stringify(body);
-                    const res = await fetch(this.API + path, opts);
-                    return res.ok ? await res.json() : null;
-                } catch (e) {
-                    console.error('API error:', e);
-                    return null;
-                }
-            },
-
-            async load() {
-                const [workspaces, tasks, notes] = await Promise.all([
-                    this.api('/workspaces'),
-                    this.api('/tasks'),
-                    this.api('/notes')
-                ]);
-
-                if (Array.isArray(workspaces)) this.state.workspaces = workspaces;
-                if (Array.isArray(tasks)) this.state.tasks = tasks;
-                if (Array.isArray(notes)) this.state.notes = notes;
-
-                this.render();
-            },
-
-            render() {
-                this.renderWorkspaces();
-                this.renderTasks();
-                this.renderNotes();
-            },
-
-            renderWorkspaces() {
-                const el = document.getElementById('workspacesList');
-                if (this.state.workspaces.length === 0) {
-                    el.innerHTML = '<div class="empty">No workspaces yet</div>';
-                    return;
-                }
-                const indicators = ['code', 'work', 'personal'];
-                el.innerHTML = this.state.workspaces.map((w, i) => `
-                    <div class="workspace-item">
-                        <div class="workspace-indicator ${indicators[i % 3]}"></div>
-                        <div class="workspace-info">
-                            <div class="workspace-name">${w.name}</div>
-                            <div class="workspace-meta">${w.description || ''}</div>
-                        </div>
-                    </div>
-                `).join('');
-            },
-
-            renderTasks() {
-                const el = document.getElementById('tasksList');
-                const count = document.getElementById('taskCount');
-                const tasks = this.state.tasks.slice(0, 5);
-
-                count.textContent = this.state.tasks.length;
-
-                if (tasks.length === 0) {
-                    el.innerHTML = '<div class="empty">No tasks yet</div>';
-                    return;
-                }
-
-                el.innerHTML = tasks.map(t => {
-                    const p = ['low', 'medium', 'high'][t.priority || 1];
-                    const pl = ['Low', 'Medium', 'High'][t.priority || 1];
-                    return `
-                        <div class="task ${t.completed ? 'completed' : ''}">
-                            <div class="checkbox ${t.completed ? 'checked' : ''}"
-                                 onclick="app.toggleTask(${t.id}, ${!t.completed})"></div>
-                            <div class="task-content">
-                                <div class="task-text">${t.content}</div>
-                                <div class="task-meta">
-                                    <span class="priority priority-${p}">${pl}</span>
-                                    <span>${new Date(t.created_at).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                            <button class="btn-delete" onclick="app.deleteTask(${t.id})" title="Delete">✕</button>
-                        </div>
-                    `;
-                }).join('');
-            },
-
-            renderNotes() {
-                const el = document.getElementById('notesList');
-                const count = document.getElementById('noteCount');
-                const notes = this.state.notes.slice(0, 5);
-
-                count.textContent = this.state.notes.length;
-
-                if (notes.length === 0) {
-                    el.innerHTML = '<div class="empty">No notes yet</div>';
-                    return;
-                }
-
-                el.innerHTML = notes.map(n => `
-                    <div class="note">
-                        <div class="note-title">${n.title}</div>
-                        <div class="note-content">${n.content.substring(0, 150)}${n.content.length > 150 ? '...' : ''}</div>
-                        ${n.tags && n.tags.length > 0 ? `
-                            <div class="note-tags">
-                                ${n.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
-                            </div>
-                        ` : ''}
-                        <button class="btn-delete" onclick="app.deleteNote(event, ${n.id})" title="Delete">✕</button>
-                    </div>
-                `).join('');
-            },
-
-            async toggleTask(id, completed) {
-                await this.api(`/tasks/${id}`, 'PUT', { completed });
-                await this.load();
-                this.showToast(completed ? 'Task completed!' : 'Task reopened');
-            },
-
-            async deleteTask(id) {
-                if (!confirm('Delete this task?')) return;
-                await this.api(`/tasks/${id}`, 'DELETE');
-                await this.load();
-                this.showToast('Task deleted');
-            },
-
-            async deleteNote(e, id) {
-                e.stopPropagation();
-                if (!confirm('Delete this note?')) return;
-                await this.api(`/notes/${id}`, 'DELETE');
-                await this.load();
-                this.showToast('Note deleted');
-            },
-
-            async createTask(e) {
-                e.preventDefault();
-                const content = document.getElementById('taskInput').value;
-                const priority = parseInt(document.getElementById('taskPriority').value);
-
-                await this.api('/tasks', 'POST', { content, priority });
-                await this.load();
-                this.closeModal('task');
-                e.target.reset();
-                this.showToast('Task added!');
-            },
-
-            async createNote(e) {
-                e.preventDefault();
-                const title = document.getElementById('noteTitle').value;
-                const content = document.getElementById('noteContent').value;
-                const tagsInput = document.getElementById('noteTags').value;
-                const tags = tagsInput.split(',').map(t => t.trim()).filter(t => t);
-
-                await this.api('/notes', 'POST', { title, content, tags });
-                await this.load();
-                this.closeModal('note');
-                e.target.reset();
-                this.showToast('Note added!');
-            },
-
-            openModal(type) {
-                document.getElementById(`${type}Modal`).classList.add('active');
-                setTimeout(() => {
-                    const input = type === 'task' ? document.getElementById('taskInput') : document.getElementById('noteTitle');
-                    input?.focus();
-                }, 100);
-            },
-
-            closeModal(type) {
-                document.getElementById(`${type}Modal`).classList.remove('active');
-            },
-
-            showToast(message) {
-                const toast = document.getElementById('toast');
-                toast.textContent = message;
-                toast.classList.add('active');
-                setTimeout(() => toast.classList.remove('active'), 2000);
-            },
-
-            setupCommands() {
-                const input = document.getElementById('commandInput');
-                const suggestions = document.getElementById('suggestions');
-
-                input.addEventListener('input', (e) => {
-                    input.style.height = 'auto';
-                    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
-
-                    if (e.target.value.startsWith('/')) {
-                        suggestions.classList.add('show');
-                    } else {
-                        suggestions.classList.remove('show');
-                    }
-                });
-
-                input.addEventListener('keydown', async (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        await this.processCommand(input.value.trim());
-                        input.value = '';
-                        input.style.height = 'auto';
-                        suggestions.classList.remove('show');
-                    }
-                    if (e.key === 'Escape') {
-                        suggestions.classList.remove('show');
-                        input.blur();
-                    }
-                });
-
-                input.addEventListener('blur', () => {
-                    setTimeout(() => suggestions.classList.remove('show'), 150);
-                });
-            },
-
-            insertCommand(cmd) {
-                const input = document.getElementById('commandInput');
-                input.value = cmd;
-                input.focus();
-            },
-
-            async processCommand(text) {
-                if (!text) return;
-
-                if (text.startsWith('/task ')) {
-                    const content = text.slice(6);
-                    await this.api('/tasks', 'POST', { content, priority: 1 });
-                    await this.load();
-                    this.showToast('Task added!');
-                } else if (text.startsWith('/note ')) {
-                    const content = text.slice(6);
-                    const title = content.split('\n')[0] || 'Quick note';
-                    await this.api('/notes', 'POST', { title, content, tags: [] });
-                    await this.load();
-                    this.showToast('Note added!');
-                } else if (text.startsWith('/workspace ')) {
-                    const name = text.slice(11);
-                    await this.api('/workspaces', 'POST', { name, description: '' });
-                    await this.load();
-                    this.showToast('Workspace added!');
-                } else {
-                    await this.api('/notes', 'POST', {
-                        title: text.substring(0, 50),
-                        content: text,
-                        tags: []
-                    });
-                    await this.load();
-                    this.showToast('Note added!');
-                }
-            },
-
-            setupThemeSelector() {
-                document.querySelectorAll('.color-option').forEach(option => {
-                    option.addEventListener('click', () => {
-                        const color = option.dataset.color;
-                        this.setTheme(color);
-                    });
-                });
-            },
-
-            setTheme(color) {
-                const colors = {
-                    purple: '#7e9cd8',
-                    blue: '#7aa2f7',
-                    green: '#76946a',
-                    orange: '#e98a5b',
-                    red: '#c34043',
-                    pink: '#c678dd',
-                    teal: '#4db5bd',
-                    yellow: '#d7ba7d'
-                };
-
-                document.documentElement.style.setProperty('--primary', colors[color]);
-                this.state.theme = color;
-                localStorage.setItem('mojiTheme', color);
-
-                document.querySelectorAll('.color-option').forEach(opt => {
-                    opt.classList.toggle('active', opt.dataset.color === color);
-                });
-            },
-
-            loadTheme() {
-                const saved = localStorage.getItem('mojiTheme') || 'purple';
-                this.setTheme(saved);
-            },
-
-            setupKeyboardShortcuts() {
-                document.addEventListener('keydown', (e) => {
-                    // Cmd/Ctrl + K to focus command bar
-                    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-                        e.preventDefault();
-                        document.getElementById('commandInput').focus();
-                    }
-                    // ESC to close modals
-                    if (e.key === 'Escape') {
-                        document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
-                    }
-                });
-
-                // Close modals on outside click
-                document.querySelectorAll('.modal').forEach(modal => {
-                    modal.addEventListener('click', (e) => {
-                        if (e.target === modal) modal.classList.remove('active');
-                    });
-                });
-            }
-        };
-
-        document.addEventListener('DOMContentLoaded', () => app.init());
-    </script>
+    <script src="app.js"></script>
 </body>
 </html>
