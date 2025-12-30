@@ -1,102 +1,139 @@
 # Moji
 
-<img src="static/img/logo.svg" alt="Moji Logo" width="100" height="100">
+A workspace-centric productivity app for developers. Organize your todos and notes by project, not by endless pages.
 
-A modern todo and notepad application for developers, built with Flask and SQLAlchemy. The name "Moji" comes from the Japanese word for "letter" (文字), and our logo represents the letters "MO" in a stylized form.
+## Why Moji?
 
-## Overview
-
-Moji is a personal project that combines task management and note-taking capabilities in a single, developer-friendly application. It's designed to help developers organize their work and thoughts efficiently.
-
-## Features
-
-- **Todo Management**
-  - Create and organize todos within projects
-  - Mark tasks as complete
-  - Track completion history
-  - Project-based organization
-
-- **Note-taking**
-  - Rich text notes
-  - Project-based organization
-  - Easy search and retrieval
-
-- **User Management**
-  - Secure authentication
-  - User profiles
-  - License-based feature access
-
-- **Project Organization**
-  - Create multiple projects
-  - Organize todos and notes by project
-  - Project-specific settings
-
-## Future Plans
-
-- GitHub integration for seamless workflow
-- Enhanced collaboration features
-- API access for developers
-- Mobile application support
-- Cloud hosting for easy access and deployment
-- Docker support for simplified deployment
+Notion is great, but sometimes you just want a focused space for a project - tasks on one side, notes on the other. No databases, no templates, no friction. Just workspaces that keep you in flow.
 
 ## Tech Stack
 
-- **Backend**: Flask, SQLAlchemy
-- **Database**: SQLite (with PostgreSQL support planned)
-- **Frontend**: HTML, CSS, JavaScript
-- **Authentication**: Custom secure authentication system
-- **Deployment**: Docker, Cloud hosting (planned)
+- **Backend**: FastAPI + Supabase
+- **Frontend**: Next.js 14 (App Router) + TypeScript + Tailwind CSS
+- **Database**: PostgreSQL (Supabase)
+- **Auth**: Supabase Auth
+
+## Project Structure
+
+```
+moji/
+├── backend/
+│   ├── app/
+│   │   ├── main.py          # FastAPI app
+│   │   ├── config.py        # Settings and env vars
+│   │   ├── dependencies.py  # Auth and Supabase clients
+│   │   ├── models/          # Pydantic schemas
+│   │   └── routes/          # API endpoints
+│   └── requirements.txt
+├── frontend/
+│   ├── app/                  # Next.js pages
+│   ├── components/           # React components
+│   └── lib/                  # Supabase & API clients
+└── supabase/
+    └── schema.sql           # Database schema
+```
 
 ## Getting Started
 
-1. Clone the repository:
+### 1. Supabase Setup
 
-   ```bash
-   git clone https://github.com/Noxire-Hash/moji.git
-   cd moji
-   ```
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to SQL Editor and run the contents of `supabase/schema.sql`
+3. Enable Email/Password auth in Authentication > Providers
+4. Get your API keys from Settings > API
 
-2. Install dependencies:
+### 2. Backend Setup
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+```bash
+cd backend
 
-3. Set up the database:
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 
-   ```bash
-   flask db upgrade
-   ```
+# Install dependencies
+pip install -r requirements.txt
 
-4. Run the application:
+# Create .env file
+cat > .env << EOF
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_KEY=your-service-role-key
+DEBUG=true
+ALLOWED_ORIGINS=http://localhost:3000
+EOF
 
-   ```bash
-   flask run
-   ```
+# Run the server
+uvicorn app.main:app --reload --port 8000
+```
 
-## Hosting Plans
+The API will be available at `http://localhost:8000` with docs at `/docs`.
 
-Moji will be available as a hosted service in the future, allowing users to:
+### 3. Frontend Setup
 
-- Access their todos and notes from anywhere
-- Collaborate with team members
-- Sync with GitHub repositories
-- Use the application without local setup
+```bash
+cd frontend
 
-## Contributing
+# Install dependencies
+npm install
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+# Create .env.local file
+cat > .env.local << EOF
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_API_URL=http://localhost:8000
+EOF
+
+# Run the dev server
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`.
+
+## API Endpoints
+
+### Workspaces
+- `GET /api/v1/workspaces` - List all workspaces
+- `POST /api/v1/workspaces` - Create workspace
+- `PUT /api/v1/workspaces/{id}` - Update workspace
+- `DELETE /api/v1/workspaces/{id}` - Delete workspace
+
+### Tasks
+- `GET /api/v1/workspaces/{id}/tasks` - List tasks in workspace
+- `POST /api/v1/workspaces/{id}/tasks` - Create task
+- `PUT /api/v1/tasks/{id}` - Update task
+- `PATCH /api/v1/tasks/{id}/toggle` - Toggle task done
+- `DELETE /api/v1/tasks/{id}` - Delete task
+
+### Notes
+- `GET /api/v1/workspaces/{id}/notes` - List notes in workspace
+- `POST /api/v1/workspaces/{id}/notes` - Create note
+- `PUT /api/v1/notes/{id}` - Update note
+- `DELETE /api/v1/notes/{id}` - Delete note
+
+All endpoints require authentication via Bearer token (Supabase JWT).
+
+## Features
+
+- **Workspaces**: Create project-specific spaces
+- **Tasks**: Quick todos with priorities (none, low, medium, high)
+- **Notes**: Titled notes with content and tags
+- **Auth**: Secure authentication via Supabase
+- **RLS**: Row-level security ensures users only see their own data
+
+## Future Plans
+
+- Real-time updates with Supabase subscriptions
+- Drag-and-drop task reordering
+- Markdown support for notes
+- Search across workspaces
+- Dark/light theme toggle
+- Mobile app
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+Apache License 2.0 - see [LICENSE](LICENSE)
 
 ## Author
 
 - [Noxire-Hash](https://github.com/Noxire-Hash)
-
-## Acknowledgments
-
-- Flask and SQLAlchemy communities for their excellent documentation
-- All contributors and supporters of this project
