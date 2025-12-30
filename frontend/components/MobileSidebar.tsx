@@ -1,48 +1,41 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  CheckSquare,
+  FileText,
+  Plus,
+  File,
+  Menu,
+  X,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
-import * as api from "@/lib/api";
-import { usePages } from "@/lib/hooks";
-import { cn } from "@/lib/utils";
-import {
-  CheckSquare,
-  File,
-  FileText,
-  Plus,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
 import { toast } from "sonner";
+import { usePages } from "@/lib/hooks";
+import * as api from "@/lib/api";
 
-interface SidebarProps {
+interface MobileSidebarProps {
   workspaceId: string;
   workspaceName: string;
   isDemo?: boolean;
   activeTab?: "tasks" | "notes";
   onTabChange?: (tab: "tasks" | "notes") => void;
-  onNewTask?: () => void;
-  onNewNote?: () => void;
 }
 
-export function Sidebar({
+export function MobileSidebar({
   workspaceId,
   workspaceName,
   isDemo = false,
   activeTab = "tasks",
   onTabChange,
-  onNewTask,
-  onNewNote,
-}: SidebarProps) {
+}: MobileSidebarProps) {
+  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const { pages, isLoading, mutate } = usePages(workspaceId, isDemo);
   const [localPages, setLocalPages] = useState<api.Page[] | null>(null);
@@ -50,7 +43,6 @@ export function Sidebar({
   const displayPages = isDemo && localPages ? localPages : pages;
   const isOnPage = pathname.includes("/pages/");
 
-  // Initialize local pages from SWR data for demo mode
   if (isDemo && localPages === null && pages.length > 0) {
     setLocalPages(pages);
   }
@@ -67,6 +59,7 @@ export function Sidebar({
 
     if (isDemo) {
       setLocalPages([...(localPages || pages), newPage]);
+      setIsOpen(false);
       return;
     }
 
@@ -74,6 +67,7 @@ export function Sidebar({
       const page = await api.createPage(workspaceId, { title: "Untitled Page" });
       mutate([...pages, page], false);
       toast.success("Page created");
+      setIsOpen(false);
     } catch (err) {
       console.error("Failed to create page:", err);
       toast.error("Failed to create page");
@@ -81,21 +75,45 @@ export function Sidebar({
   }
 
   const navItems = [
-    {
-      id: "tasks" as const,
-      icon: CheckSquare,
-      label: "Tasks",
-    },
-    {
-      id: "notes" as const,
-      icon: FileText,
-      label: "Notes",
-    },
+    { id: "tasks" as const, icon: CheckSquare, label: "Tasks" },
+    { id: "notes" as const, icon: FileText, label: "Notes" },
   ];
 
   return (
-    <TooltipProvider delayDuration={0}>
-      <div className="flex flex-col h-full w-60 bg-card/50 border-r border-border">
+    <>
+      {/* Mobile Menu Button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden"
+        onClick={() => setIsOpen(true)}
+      >
+        <Menu className="w-5 h-5" />
+      </Button>
+
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Slide-out Menu */}
+      <div
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-72 bg-card border-r border-border transform transition-transform duration-300 ease-in-out md:hidden",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-border">
+          <span className="font-semibold">Menu</span>
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
         {/* Workspace Switcher */}
         <div className="p-2 border-b border-border">
           <WorkspaceSwitcher
@@ -113,15 +131,18 @@ export function Sidebar({
               return (
                 <button
                   key={item.id}
-                  onClick={() => onTabChange?.(item.id)}
+                  onClick={() => {
+                    onTabChange?.(item.id);
+                    setIsOpen(false);
+                  }}
                   className={cn(
-                    "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-all",
+                    "w-full flex items-center gap-2.5 px-2.5 py-3 rounded-lg text-sm font-medium transition-all",
                     isActive
                       ? "bg-primary/10 text-primary"
                       : "text-muted-foreground hover:bg-accent hover:text-foreground"
                   )}
                 >
-                  <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
+                  <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
                   <span>{item.label}</span>
                 </button>
               );
@@ -136,19 +157,15 @@ export function Sidebar({
               <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Pages
               </span>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-5 w-5"
-                    onClick={handleNewPage}
-                  >
-                    <Plus className="h-3 w-3" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="right">New Page</TooltipContent>
-              </Tooltip>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2"
+                onClick={handleNewPage}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                New
+              </Button>
             </div>
 
             {isLoading ? (
@@ -164,10 +181,11 @@ export function Sidebar({
                 <Link
                   key={page.id}
                   href={`/workspaces/${workspaceId}/pages/${page.id}`}
+                  onClick={() => setIsOpen(false)}
                 >
                   <div
                     className={cn(
-                      "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
+                      "flex items-center gap-2 px-2 py-2.5 rounded-md text-sm transition-colors",
                       pathname.includes(`/pages/${page.id}`)
                         ? "bg-accent text-foreground"
                         : "text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -181,29 +199,7 @@ export function Sidebar({
             )}
           </div>
         </ScrollArea>
-
-        {/* Quick Actions */}
-        <div className="p-2 border-t border-border space-y-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2 text-muted-foreground"
-            onClick={onNewTask}
-          >
-            <Plus className="w-4 h-4" />
-            New Task
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start gap-2 text-muted-foreground"
-            onClick={onNewNote}
-          >
-            <Plus className="w-4 h-4" />
-            New Note
-          </Button>
-        </div>
       </div>
-    </TooltipProvider>
+    </>
   );
 }

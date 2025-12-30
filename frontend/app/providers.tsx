@@ -3,6 +3,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase, AuthUser } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
+import { Theme, themes, defaultTheme, getThemeById, applyTheme, THEME_STORAGE_KEY } from "@/lib/themes";
+
+// ============================================================================
+// Auth Context
+// ============================================================================
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -20,11 +25,27 @@ const AuthContext = createContext<AuthContextType>({
   signOut: async () => {},
 });
 
+// ============================================================================
+// Theme Context
+// ============================================================================
+
+interface ThemeContextType {
+  theme: Theme;
+  themes: Theme[];
+  setTheme: (themeId: string) => void;
+}
+
+const ThemeContext = createContext<ThemeContextType>({
+  theme: defaultTheme,
+  themes: themes,
+  setTheme: () => {},
+});
+
 // Demo user for UI preview
 const DEMO_USER: AuthUser = {
   id: "demo-user-id",
   email: "demo@moji.app",
-  user_metadata: { full_name: "Demo User" },
+  user_metadata: { username: "demo" },
 };
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -65,7 +86,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     localStorage.removeItem("moji_demo_mode");
     setIsDemo(false);
+    setUser(null);
+    setSession(null);
     await supabase.auth.signOut();
+    // Force full page reload to clear all state and redirect to login
+    window.location.href = "/login";
   };
 
   return (
@@ -79,3 +104,45 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+// ============================================================================
+// Theme Provider
+// ============================================================================
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [currentTheme, setCurrentTheme] = useState<Theme>(defaultTheme);
+  const [mounted, setMounted] = useState(false);
+
+  // Load theme from localStorage on mount
+  useEffect(() => {
+    setMounted(true);
+    const savedThemeId = localStorage.getItem(THEME_STORAGE_KEY);
+    if (savedThemeId) {
+      const theme = getThemeById(savedThemeId);
+      setCurrentTheme(theme);
+      applyTheme(theme);
+    }
+  }, []);
+
+  // Apply theme when it changes
+  useEffect(() => {
+    if (mounted) {
+      applyTheme(currentTheme);
+    }
+  }, [currentTheme, mounted]);
+
+  const setTheme = (themeId: string) => {
+    const theme = getThemeById(themeId);
+    setCurrentTheme(theme);
+    localStorage.setItem(THEME_STORAGE_KEY, themeId);
+  };
+
+  return (
+    <ThemeContext.Provider value={{ theme: currentTheme, themes, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+export function useTheme() {
+  return useContext(ThemeContext);
+}

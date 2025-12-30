@@ -1,82 +1,39 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Trash2, X, Tag } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import * as api from "@/lib/api";
+import { useNotes } from "@/lib/hooks";
+import { Plus, Tag, Trash2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface NoteListProps {
   workspaceId: string;
   isDemo?: boolean;
 }
 
-const DEMO_NOTES: api.Note[] = [
-  {
-    id: "n1",
-    title: "Project Ideas",
-    content: "1. AI-powered todo prioritization\n2. Cross-device sync\n3. GitHub integration",
-    tags: ["ideas", "roadmap"],
-    workspace_id: "demo-1",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "n2",
-    title: "Tech Stack",
-    content: "FastAPI + Supabase + Next.js\n\nReasons:\n- Modern stack\n- Great DX",
-    tags: ["tech"],
-    workspace_id: "demo-1",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "n3",
-    title: "Quick Thoughts",
-    content: "Remember to add keyboard shortcuts!",
-    tags: [],
-    workspace_id: "demo-1",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
 export function NoteList({ workspaceId, isDemo = false }: NoteListProps) {
-  const [notes, setNotes] = useState<api.Note[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { notes, isLoading, mutate } = useNotes(workspaceId, isDemo);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedNote, setSelectedNote] = useState<api.Note | null>(null);
+  // Local state for demo mode mutations
+  const [localNotes, setLocalNotes] = useState<api.Note[] | null>(null);
 
-  useEffect(() => {
-    loadNotes();
-  }, [workspaceId, isDemo]);
+  const displayNotes = isDemo && localNotes ? localNotes : notes;
 
-  async function loadNotes() {
-    if (isDemo) {
-      setNotes(DEMO_NOTES);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const data = await api.getNotes(workspaceId);
-      setNotes(data);
-    } catch (err) {
-      console.error("Failed to load notes:", err);
-    } finally {
-      setLoading(false);
-    }
+  if (isDemo && localNotes === null && notes.length > 0) {
+    setLocalNotes(notes);
   }
 
   async function handleCreate(data: { title: string; content: string; tags: string[] }) {
@@ -89,26 +46,28 @@ export function NoteList({ workspaceId, isDemo = false }: NoteListProps) {
     };
 
     if (isDemo) {
-      setNotes([newNote, ...notes]);
+      setLocalNotes([newNote, ...(localNotes || notes)]);
       setShowCreate(false);
       return;
     }
 
     try {
       const note = await api.createNote(workspaceId, data);
-      setNotes([note, ...notes]);
+      mutate([note, ...notes], false);
       setShowCreate(false);
+      toast.success("Note created");
     } catch (err) {
       console.error("Failed to create note:", err);
+      toast.error("Failed to create note");
     }
   }
 
   async function handleUpdate(noteId: string, data: { title?: string; content?: string; tags?: string[] }) {
     if (isDemo) {
-      const updated = notes.find((n) => n.id === noteId);
-      if (updated) {
-        const newNote = { ...updated, ...data, updated_at: new Date().toISOString() };
-        setNotes(notes.map((n) => (n.id === noteId ? newNote : n)));
+      const current = (localNotes || notes).find((n) => n.id === noteId);
+      if (current) {
+        const updated = { ...current, ...data, updated_at: new Date().toISOString() };
+        setLocalNotes((localNotes || notes).map((n) => (n.id === noteId ? updated : n)));
       }
       setSelectedNote(null);
       return;
@@ -116,33 +75,52 @@ export function NoteList({ workspaceId, isDemo = false }: NoteListProps) {
 
     try {
       const updated = await api.updateNote(noteId, data);
-      setNotes(notes.map((n) => (n.id === noteId ? updated : n)));
+      mutate(notes.map((n) => (n.id === noteId ? updated : n)), false);
       setSelectedNote(null);
     } catch (err) {
       console.error("Failed to update note:", err);
+      toast.error("Failed to update note");
     }
   }
 
   async function handleDelete(noteId: string) {
     if (isDemo) {
-      setNotes(notes.filter((n) => n.id !== noteId));
+      setLocalNotes((localNotes || notes).filter((n) => n.id !== noteId));
       setSelectedNote(null);
       return;
     }
 
     try {
       await api.deleteNote(noteId);
-      setNotes(notes.filter((n) => n.id !== noteId));
+      mutate(notes.filter((n) => n.id !== noteId), false);
       setSelectedNote(null);
+      toast.success("Note deleted");
     } catch (err) {
       console.error("Failed to delete note:", err);
+      toast.error("Failed to delete note");
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-8 w-24" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-4">
+              <Skeleton className="h-5 w-32 mb-2" />
+              <Skeleton className="h-3 w-full mb-1" />
+              <Skeleton className="h-3 w-3/4 mb-3" />
+              <div className="flex gap-1">
+                <Skeleton className="h-5 w-12" />
+                <Skeleton className="h-5 w-14" />
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -151,7 +129,7 @@ export function NoteList({ workspaceId, isDemo = false }: NoteListProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{notes.length} notes</span>
+        <span className="text-sm text-muted-foreground">{displayNotes.length} notes</span>
         <Button size="sm" onClick={() => setShowCreate(true)}>
           <Plus className="w-4 h-4 mr-1" />
           New Note
@@ -159,13 +137,13 @@ export function NoteList({ workspaceId, isDemo = false }: NoteListProps) {
       </div>
 
       {/* Notes Grid */}
-      {notes.length === 0 ? (
+      {displayNotes.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <p className="text-sm">No notes yet. Create one!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 stagger">
-          {notes.map((note) => (
+          {displayNotes.map((note) => (
             <NoteCard
               key={note.id}
               note={note}
@@ -211,9 +189,8 @@ function NoteCard({
       className="group cursor-pointer relative overflow-hidden border-border/50 bg-card/80 hover:bg-card hover:border-border transition-all duration-200 hover:shadow-lg hover:shadow-primary/5"
       onClick={onClick}
     >
-      {/* Subtle gradient accent */}
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-      
+
       <CardContent className="p-4">
         <h4 className="font-medium text-sm mb-2 line-clamp-1 group-hover:text-primary transition-colors">
           {note.title}
@@ -224,9 +201,9 @@ function NoteCard({
         {note.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
             {note.tags.slice(0, 3).map((tag, i) => (
-              <Badge 
-                key={i} 
-                variant="secondary" 
+              <Badge
+                key={i}
+                variant="secondary"
                 className="text-xs bg-primary/10 text-primary/80 hover:bg-primary/20 border-0"
               >
                 {tag}

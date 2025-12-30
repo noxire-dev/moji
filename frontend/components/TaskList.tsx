@@ -1,32 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Plus, Trash2, MoreHorizontal } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import * as api from "@/lib/api";
+import { useTasks } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
+import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface TaskListProps {
   workspaceId: string;
   isDemo?: boolean;
 }
-
-const DEMO_TASKS: api.Task[] = [
-  { id: "t1", content: "Set up Supabase project", done: true, priority: 3, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "t2", content: "Build FastAPI backend", done: true, priority: 2, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "t3", content: "Create Next.js frontend with shadcn", done: false, priority: 3, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "t4", content: "Implement Pages feature", done: false, priority: 2, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "t5", content: "Add markdown editor", done: false, priority: 1, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-];
 
 const priorityConfig = {
   0: { label: "None", color: "text-muted-foreground", border: "border-l-muted" },
@@ -36,31 +31,18 @@ const priorityConfig = {
 };
 
 export function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
-  const [tasks, setTasks] = useState<api.Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { tasks, isLoading, mutate } = useTasks(workspaceId, isDemo);
   const [newContent, setNewContent] = useState("");
   const [newPriority, setNewPriority] = useState(0);
+  // Local state for demo mode mutations
+  const [localTasks, setLocalTasks] = useState<api.Task[] | null>(null);
 
-  useEffect(() => {
-    loadTasks();
-  }, [workspaceId, isDemo]);
+  // Use local tasks for demo mode, SWR tasks otherwise
+  const displayTasks = isDemo && localTasks ? localTasks : tasks;
 
-  async function loadTasks() {
-    if (isDemo) {
-      setTasks(DEMO_TASKS);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const data = await api.getTasks(workspaceId);
-      setTasks(data);
-    } catch (err) {
-      console.error("Failed to load tasks:", err);
-    } finally {
-      setLoading(false);
-    }
+  // Initialize local tasks from SWR data for demo mode
+  if (isDemo && localTasks === null && tasks.length > 0) {
+    setLocalTasks(tasks);
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -78,7 +60,7 @@ export function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
     };
 
     if (isDemo) {
-      setTasks([...tasks, newTask]);
+      setLocalTasks([...(localTasks || tasks), newTask]);
       setNewContent("");
       setNewPriority(0);
       return;
@@ -89,49 +71,67 @@ export function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
         content: newContent.trim(),
         priority: newPriority,
       });
-      setTasks([...tasks, task]);
+      mutate([...tasks, task], false);
       setNewContent("");
       setNewPriority(0);
     } catch (err) {
       console.error("Failed to create task:", err);
+      toast.error("Failed to create task");
     }
   }
 
   async function handleToggle(taskId: string) {
     if (isDemo) {
-      setTasks(tasks.map((t) => (t.id === taskId ? { ...t, done: !t.done } : t)));
+      setLocalTasks((localTasks || tasks).map((t) =>
+        t.id === taskId ? { ...t, done: !t.done } : t
+      ));
       return;
     }
 
     try {
       const updated = await api.toggleTask(taskId);
-      setTasks(tasks.map((t) => (t.id === taskId ? updated : t)));
+      mutate(tasks.map((t) => (t.id === taskId ? updated : t)), false);
     } catch (err) {
       console.error("Failed to toggle task:", err);
+      toast.error("Failed to update task");
     }
   }
 
   async function handleDelete(taskId: string) {
     if (isDemo) {
-      setTasks(tasks.filter((t) => t.id !== taskId));
+      setLocalTasks((localTasks || tasks).filter((t) => t.id !== taskId));
       return;
     }
 
     try {
       await api.deleteTask(taskId);
-      setTasks(tasks.filter((t) => t.id !== taskId));
+      mutate(tasks.filter((t) => t.id !== taskId), false);
     } catch (err) {
       console.error("Failed to delete task:", err);
+      toast.error("Failed to delete task");
     }
   }
 
-  const incompleteTasks = tasks.filter((t) => !t.done).sort((a, b) => b.priority - a.priority);
-  const completedTasks = tasks.filter((t) => t.done);
+  const incompleteTasks = displayTasks.filter((t) => !t.done).sort((a, b) => b.priority - a.priority);
+  const completedTasks = displayTasks.filter((t) => t.done);
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-10" />
+        </div>
+        <div className="space-y-1">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border/50">
+              <Skeleton className="h-5 w-5 rounded-full" />
+              <Skeleton className="h-4 flex-1" />
+              <Skeleton className="h-5 w-16" />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -176,9 +176,7 @@ export function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
       {/* Completed */}
       {completedTasks.length > 0 && (
         <div className="mt-6">
-          <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
-            Completed ({completedTasks.length})
-          </h4>
+          <CompletedHeader completedTasks={completedTasks} />
           <div className="space-y-1">
             {completedTasks.map((task) => (
               <TaskItem
@@ -193,7 +191,7 @@ export function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
       )}
 
       {/* Empty State */}
-      {tasks.length === 0 && (
+      {displayTasks.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
           <p className="text-sm">No tasks yet. Add one above!</p>
         </div>
@@ -218,7 +216,7 @@ function TaskItem({
       className={cn(
         "group flex items-center gap-3 px-4 py-3 rounded-xl border transition-all duration-200",
         task.done
-          ? "bg-muted/30 border-transparent opacity-60"
+          ? "bg-muted/30 border-transparent opacity-75"
           : `bg-card/80 border-border/50 hover:border-border hover:bg-card hover:shadow-md hover:shadow-primary/5 ${priority.border}`
       )}
     >
@@ -227,8 +225,8 @@ function TaskItem({
         onCheckedChange={onToggle}
         className={cn(
           "h-5 w-5 rounded-full border-2 transition-colors",
-          task.done 
-            ? "data-[state=checked]:bg-primary data-[state=checked]:border-primary" 
+          task.done
+            ? "data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             : "border-muted-foreground/40 hover:border-primary"
         )}
       />
@@ -240,14 +238,17 @@ function TaskItem({
       >
         {task.content}
       </span>
-      {task.priority > 0 && !task.done && (
-        <Badge 
-          variant="outline" 
+      {task.priority > 0 && (
+        <Badge
+          variant="outline"
           className={cn(
-            "text-xs font-medium border-0 px-2.5 py-0.5",
-            task.priority === 3 && "bg-destructive/15 text-destructive",
-            task.priority === 2 && "bg-yellow-500/15 text-yellow-500",
-            task.priority === 1 && "bg-green-500/15 text-green-500"
+            "text-xs font-medium border-0 px-2.5 py-0.5 transition-opacity",
+            !task.done && task.priority === 3 && "bg-destructive/15 text-destructive",
+            !task.done && task.priority === 2 && "bg-yellow-500/15 text-yellow-500",
+            !task.done && task.priority === 1 && "bg-green-500/15 text-green-500",
+            task.done && task.priority === 3 && "bg-destructive/8 text-destructive/60",
+            task.done && task.priority === 2 && "bg-yellow-500/8 text-yellow-500/60",
+            task.done && task.priority === 1 && "bg-green-500/8 text-green-500/60"
           )}
         >
           {priority.label}
@@ -270,6 +271,40 @@ function TaskItem({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+    </div>
+  );
+}
+
+function CompletedHeader({ completedTasks }: { completedTasks: api.Task[] }) {
+  const lowCount = completedTasks.filter((t) => t.priority === 1).length;
+  const mediumCount = completedTasks.filter((t) => t.priority === 2).length;
+  const highCount = completedTasks.filter((t) => t.priority === 3).length;
+  const hasPriorityCounts = lowCount > 0 || mediumCount > 0 || highCount > 0;
+
+  return (
+    <div className="flex items-center gap-3 mb-2">
+      <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+        Completed ({completedTasks.length})
+      </h4>
+      {hasPriorityCounts && (
+        <div className="flex items-center gap-1.5">
+          {highCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-destructive/10 text-destructive/70">
+              High {highCount}
+            </span>
+          )}
+          {mediumCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-yellow-500/10 text-yellow-500/70">
+              Med {mediumCount}
+            </span>
+          )}
+          {lowCount > 0 && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-500/10 text-green-500/70">
+              Low {lowCount}
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }

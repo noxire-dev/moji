@@ -1,19 +1,22 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Save, Trash2, Columns2, Maximize2 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from "@/components/ui/tooltip";
 import * as api from "@/lib/api";
+import { usePage } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
+import { ArrowLeft, Columns2, Maximize2, Save, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface PageEditorProps {
   pageId: string;
@@ -23,94 +26,6 @@ interface PageEditorProps {
   onDelete?: () => void;
 }
 
-const DEMO_PAGES: Record<string, api.Page> = {
-  p1: {
-    id: "p1",
-    title: "Project Overview",
-    content: `# Moji Project Overview
-
-## Goals
-- Create a less bloated alternative to Notion
-- Focus on workspace-centric organization
-- Keep it fast and minimal
-
-## Key Features
-1. **Workspaces** - Organize by project
-2. **Tasks** - Quick todos with priorities
-3. **Notes** - Short cards for quick thoughts
-4. **Pages** - Full documents for longer content
-
-## Tech Stack
-- FastAPI backend
-- Next.js frontend
-- Supabase database
-
----
-
-*Last updated: December 2025*`,
-    workspace_id: "demo-1",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  p2: {
-    id: "p2",
-    title: "Architecture Notes",
-    content: `# Architecture Notes
-
-## Backend Structure
-\`\`\`
-backend/
-├── app/
-│   ├── config.py
-│   ├── dependencies.py
-│   ├── main.py
-│   ├── models/
-│   └── routes/
-\`\`\`
-
-## Frontend Structure
-\`\`\`
-frontend/
-├── app/
-├── components/
-├── lib/
-└── public/
-\`\`\`
-
-## Database Schema
-- workspaces
-- tasks
-- notes
-- pages
-
-All tables have RLS enabled for security.`,
-    workspace_id: "demo-1",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  p3: {
-    id: "p3",
-    title: "Meeting Notes",
-    content: `# Meeting Notes - Dec 30, 2025
-
-## Agenda
-1. Review current progress
-2. Discuss next steps
-3. Q&A
-
-## Action Items
-- [ ] Complete UI redesign
-- [ ] Add Pages feature
-- [ ] Test with real users
-
-## Notes
-The current UI is too generic. Need to use shadcn for better components and create a more distinctive dark theme.`,
-    workspace_id: "demo-1",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-};
-
 export function PageEditor({
   pageId,
   workspaceId,
@@ -118,63 +33,35 @@ export function PageEditor({
   onBack,
   onDelete,
 }: PageEditorProps) {
-  const [page, setPage] = useState<api.Page | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { page: fetchedPage, isLoading, mutate } = usePage(pageId, isDemo);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
   const [splitView, setSplitView] = useState(true);
+  const [initialized, setInitialized] = useState(false);
+
+  // Initialize title and content when page data loads
+  useEffect(() => {
+    if (fetchedPage && !initialized) {
+      setTitle(fetchedPage.title);
+      setContent(fetchedPage.content);
+      setInitialized(true);
+    }
+  }, [fetchedPage, initialized]);
 
   useEffect(() => {
-    loadPage();
-  }, [pageId, isDemo]);
-
-  useEffect(() => {
-    if (page) {
-      const changed = title !== page.title || content !== page.content;
+    if (fetchedPage && initialized) {
+      const changed = title !== fetchedPage.title || content !== fetchedPage.content;
       setHasChanges(changed);
     }
-  }, [title, content, page]);
-
-  async function loadPage() {
-    if (isDemo) {
-      const demoPage = DEMO_PAGES[pageId] || {
-        id: pageId,
-        title: "Untitled Page",
-        content: "",
-        workspace_id: workspaceId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setPage(demoPage);
-      setTitle(demoPage.title);
-      setContent(demoPage.content);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const data = await api.getPage(pageId);
-      setPage(data);
-      setTitle(data.title);
-      setContent(data.content);
-    } catch (err) {
-      console.error("Failed to load page:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, [title, content, fetchedPage, initialized]);
 
   const handleSave = useCallback(async () => {
-    if (!hasChanges) return;
+    if (!hasChanges || !fetchedPage) return;
 
     if (isDemo) {
-      if (DEMO_PAGES[pageId]) {
-        DEMO_PAGES[pageId] = { ...DEMO_PAGES[pageId], title, content };
-      }
-      setPage((prev) => (prev ? { ...prev, title, content } : null));
+      mutate({ ...fetchedPage, title, content }, false);
       setHasChanges(false);
       return;
     }
@@ -182,14 +69,16 @@ export function PageEditor({
     try {
       setSaving(true);
       const updated = await api.updatePage(pageId, { title, content });
-      setPage(updated);
+      mutate(updated, false);
       setHasChanges(false);
+      toast.success("Page saved");
     } catch (err) {
       console.error("Failed to save page:", err);
+      toast.error("Failed to save page");
     } finally {
       setSaving(false);
     }
-  }, [pageId, title, content, hasChanges, isDemo]);
+  }, [pageId, title, content, hasChanges, isDemo, fetchedPage, mutate]);
 
   // Auto-save on Cmd/Ctrl + S
   useEffect(() => {
@@ -205,28 +94,47 @@ export function PageEditor({
 
   async function handleDelete() {
     if (isDemo) {
-      delete DEMO_PAGES[pageId];
       onDelete?.();
       return;
     }
 
     try {
       await api.deletePage(pageId);
+      toast.success("Page deleted");
       onDelete?.();
     } catch (err) {
       console.error("Failed to delete page:", err);
+      toast.error("Failed to delete page");
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="h-full flex flex-col">
+        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50">
+          <div className="flex items-center gap-2 flex-1">
+            <Skeleton className="w-8 h-8 rounded" />
+            <Skeleton className="h-6 w-48" />
+          </div>
+          <div className="flex items-center gap-1">
+            <Skeleton className="w-8 h-8 rounded" />
+            <Skeleton className="w-20 h-8 rounded" />
+            <Skeleton className="w-8 h-8 rounded" />
+          </div>
+        </div>
+        <div className="flex-1 flex">
+          <div className="flex-1 p-4 space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-4 w-5/6" />
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!page) {
+  if (!fetchedPage) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <p>Page not found</p>

@@ -1,100 +1,44 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
-import { Plus, Folder, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import * as api from "@/lib/api";
-
-const DEMO_WORKSPACES: api.Workspace[] = [
-  {
-    id: "demo-1",
-    name: "Personal",
-    description: "Personal tasks and notes",
-    user_id: "demo-user",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "demo-2",
-    name: "Moji Development",
-    description: "Building the best productivity app",
-    user_id: "demo-user",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "demo-3",
-    name: "2026 Goals",
-    description: "New year resolutions and plans",
-    user_id: "demo-user",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
+import { useWorkspaces } from "@/lib/hooks";
+import { Folder, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface WorkspaceListProps {
   isDemo?: boolean;
 }
 
 export function WorkspaceList({ isDemo = false }: WorkspaceListProps) {
-  const [workspaces, setWorkspaces] = useState<api.Workspace[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { workspaces, isLoading, mutate } = useWorkspaces(isDemo);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
 
-  useEffect(() => {
-    loadWorkspaces();
-  }, [isDemo]);
-
-  async function loadWorkspaces() {
-    if (isDemo) {
-      setWorkspaces(DEMO_WORKSPACES);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const data = await api.getWorkspaces();
-      setWorkspaces(data);
-    } catch (err) {
-      console.error("Failed to load workspaces:", err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
   async function handleCreate() {
     if (!newName.trim()) return;
 
-    const newWorkspace: api.Workspace = {
-      id: `ws-${Date.now()}`,
-      name: newName.trim(),
-      description: newDescription.trim() || null,
-      user_id: "demo-user",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
     if (isDemo) {
-      setWorkspaces([...workspaces, newWorkspace]);
+      // For demo, just close the dialog (SWR handles demo data)
       setNewName("");
       setNewDescription("");
       setShowCreate(false);
@@ -106,33 +50,55 @@ export function WorkspaceList({ isDemo = false }: WorkspaceListProps) {
         name: newName.trim(),
         description: newDescription.trim() || undefined,
       });
-      setWorkspaces([...workspaces, workspace]);
+      mutate([...workspaces, workspace], false);
       setNewName("");
       setNewDescription("");
       setShowCreate(false);
+      toast.success("Workspace created");
     } catch (err) {
       console.error("Failed to create workspace:", err);
+      toast.error("Failed to create workspace");
     }
   }
 
   async function handleDelete(id: string) {
     if (isDemo) {
-      setWorkspaces(workspaces.filter((w) => w.id !== id));
-      return;
+      return; // Don't allow deletion in demo mode
     }
 
     try {
       await api.deleteWorkspace(id);
-      setWorkspaces(workspaces.filter((w) => w.id !== id));
+      mutate(workspaces.filter((w) => w.id !== id), false);
+      toast.success("Workspace deleted");
     } catch (err) {
       console.error("Failed to delete workspace:", err);
+      toast.error("Failed to delete workspace");
     }
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <Skeleton className="h-8 w-36" />
+            <Skeleton className="h-4 w-48 mt-2" />
+          </div>
+          <Skeleton className="h-10 w-36" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i} className="p-5">
+              <div className="flex items-start gap-3">
+                <Skeleton className="w-10 h-10 rounded-lg" />
+                <div className="flex-1">
+                  <Skeleton className="h-5 w-24" />
+                  <Skeleton className="h-4 w-32 mt-1" />
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
@@ -199,6 +165,7 @@ export function WorkspaceList({ isDemo = false }: WorkspaceListProps) {
               key={workspace.id}
               workspace={workspace}
               onDelete={() => handleDelete(workspace.id)}
+              isDemo={isDemo}
             />
           ))}
         </div>
@@ -210,9 +177,11 @@ export function WorkspaceList({ isDemo = false }: WorkspaceListProps) {
 function WorkspaceCard({
   workspace,
   onDelete,
+  isDemo,
 }: {
   workspace: api.Workspace;
   onDelete: () => void;
+  isDemo: boolean;
 }) {
   return (
     <Card className="group relative hover:bg-accent/50 transition-colors">
@@ -233,30 +202,32 @@ function WorkspaceCard({
           </div>
         </CardContent>
       </Link>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-3 right-3 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-            onClick={(e) => e.preventDefault()}
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={(e) => {
-              e.preventDefault();
-              onDelete();
-            }}
-            className="text-destructive"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {!isDemo && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-3 right-3 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => e.preventDefault()}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.preventDefault();
+                onDelete();
+              }}
+              className="text-destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </Card>
   );
 }

@@ -1,27 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Sparkles, Eye, ArrowRight } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
+import { supabase } from "@/lib/supabase";
+import { ArrowRight, Eye } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   function handleDemoMode() {
     localStorage.setItem("moji_demo_mode", "true");
-    router.push("/");
+    // Force full page reload so AuthProvider re-checks localStorage
+    window.location.href = "/";
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -42,7 +44,7 @@ export default function LoginPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: name } },
+          options: { data: { username } },
         });
         if (error) throw error;
         setMessage("Check your email to confirm your account!");
@@ -69,7 +71,7 @@ export default function LoginPage() {
         <div className="text-center mb-8 animate-fade-in">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-2xl shadow-primary/25">
-              <Sparkles className="w-8 h-8 text-primary-foreground" />
+              <Image src="/logo.svg" alt="Moji" width={32} height={32} className="w-8 h-8" />
             </div>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Welcome to Moji</h1>
@@ -122,9 +124,9 @@ export default function LoginPage() {
               {mode === "signup" && (
                 <Input
                   type="text"
-                  placeholder="Full name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                   className="h-11"
                 />
@@ -146,9 +148,9 @@ export default function LoginPage() {
                 minLength={6}
                 className="h-11"
               />
-              <Button 
-                type="submit" 
-                className="w-full h-11 font-medium" 
+              <Button
+                type="submit"
+                className="w-full h-11 font-medium"
                 disabled={loading}
               >
                 {loading ? (

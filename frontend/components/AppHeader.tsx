@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Sparkles, Settings } from "lucide-react";
+import Image from "next/image";
+import { LogOut, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -13,22 +14,25 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 interface AppHeaderProps {
+  username?: string;
   email?: string;
   isDemo?: boolean;
   onSignOut: () => void;
 }
 
-export function AppHeader({ email, isDemo, onSignOut }: AppHeaderProps) {
-  const initials = email ? email.slice(0, 2).toUpperCase() : "MO";
+export function AppHeader({ username, email, isDemo, onSignOut }: AppHeaderProps) {
+  // Fallback: username -> email prefix -> "guest"
+  const displayName = username || email?.split('@')[0] || "guest";
+  const initials = displayName.slice(0, 2).toUpperCase();
 
   return (
-    <header className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-md flex items-center justify-between px-4">
+    <header className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-md flex items-center justify-between px-3 md:px-4">
       {/* Left - Logo */}
-      <Link href="/" className="flex items-center gap-2.5 group">
+      <Link href="/" className="flex items-center gap-2 md:gap-2.5 group">
         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow">
-          <Sparkles className="w-4 h-4 text-primary-foreground" />
+          <Image src="/logo.svg" alt="Moji" width={16} height={16} className="w-4 h-4" />
         </div>
-        <span className="text-sm font-semibold tracking-tight">Moji</span>
+        <span className="text-sm font-semibold tracking-tight hidden sm:inline">Moji</span>
       </Link>
 
       {/* Center - Demo Badge */}
@@ -43,9 +47,9 @@ export function AppHeader({ email, isDemo, onSignOut }: AppHeaderProps) {
       <div className="flex items-center gap-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               className="h-9 w-9 rounded-full hover:bg-accent"
             >
               <Avatar className="h-8 w-8 border border-border">
@@ -57,17 +61,25 @@ export function AppHeader({ email, isDemo, onSignOut }: AppHeaderProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
             <div className="px-3 py-2">
-              <p className="text-sm font-medium">{email || "Guest User"}</p>
+              <p className="text-sm font-medium">@{displayName}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
                 {isDemo ? "Preview mode" : "Personal account"}
               </p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer">
-              <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
-              Settings
+            <DropdownMenuItem className="cursor-pointer" asChild>
+              <Link href="/profile">
+                <User className="w-4 h-4 mr-2 text-muted-foreground" />
+                Profile
+              </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem 
+            <DropdownMenuItem className="cursor-pointer" asChild>
+              <Link href="/settings">
+                <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
               onClick={onSignOut}
               className="cursor-pointer text-destructive focus:text-destructive"
             >

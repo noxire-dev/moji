@@ -9,8 +9,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface AuthUser {
   id: string;
   email?: string;
+  created_at?: string;
   user_metadata?: {
-    full_name?: string;
+    username?: string;
     avatar_url?: string;
   };
 }
@@ -26,4 +27,3 @@ export async function getCurrentUser() {
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 }
-

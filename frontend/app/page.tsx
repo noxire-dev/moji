@@ -1,19 +1,22 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Sparkles, LogOut } from "lucide-react";
-import { AuthProvider, useAuth } from "@/app/providers";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/app/providers";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 import { WorkspaceList } from "@/components/WorkspaceList";
+import { LogOut, Settings, User } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 function Dashboard() {
   const { user, loading, signOut, isDemo } = useAuth();
@@ -37,7 +40,8 @@ function Dashboard() {
     return null;
   }
 
-  const initials = user.email ? user.email.slice(0, 2).toUpperCase() : "MO";
+  const username = user.user_metadata?.username || user.email?.split('@')[0] || "guest";
+  const initials = username.slice(0, 2).toUpperCase();
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,7 +50,7 @@ function Dashboard() {
         <div className="max-w-6xl mx-auto h-full px-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-primary-foreground" />
+              <Image src="/logo.svg" alt="Moji" width={16} height={16} className="w-4 h-4" />
             </div>
             <span className="text-lg font-semibold">Moji</span>
           </div>
@@ -69,9 +73,25 @@ function Dashboard() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium truncate">{user.email}</p>
+                  <p className="text-sm font-medium truncate">@{username}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {isDemo ? "Preview mode" : "Personal account"}
+                  </p>
                 </div>
-                <DropdownMenuItem onClick={signOut}>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="cursor-pointer" asChild>
+                  <Link href="/profile">
+                    <User className="w-4 h-4 mr-2 text-muted-foreground" />
+                    Profile
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer" asChild>
+                  <Link href="/settings">
+                    <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive">
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign out
                 </DropdownMenuItem>
@@ -97,9 +117,5 @@ function Dashboard() {
 }
 
 export default function Home() {
-  return (
-    <AuthProvider>
-      <Dashboard />
-    </AuthProvider>
-  );
+  return <Dashboard />;
 }

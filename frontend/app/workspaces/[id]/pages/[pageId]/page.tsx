@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { AuthProvider, useAuth } from "@/app/providers";
+import { useAuth } from "@/app/providers";
 import { AppHeader } from "@/components/AppHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { PageEditor } from "@/components/PageEditor";
-import * as api from "@/lib/api";
-
-const DEMO_WORKSPACES: Record<string, api.Workspace> = {
-  "demo-1": { id: "demo-1", name: "Personal", description: "", user_id: "demo", created_at: "", updated_at: "" },
-  "demo-2": { id: "demo-2", name: "Moji Development", description: "", user_id: "demo", created_at: "", updated_at: "" },
-  "demo-3": { id: "demo-3", name: "2026 Goals", description: "", user_id: "demo", created_at: "", updated_at: "" },
-};
+import { useWorkspace } from "@/lib/hooks";
 
 function PageDetail() {
   const { user, loading: authLoading, signOut, isDemo } = useAuth();
@@ -20,7 +14,8 @@ function PageDetail() {
   const params = useParams();
   const workspaceId = params.id as string;
   const pageId = params.pageId as string;
-  const [workspaceName, setWorkspaceName] = useState("Workspace");
+
+  const { workspace, isLoading } = useWorkspace(workspaceId, isDemo);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -28,17 +23,7 @@ function PageDetail() {
     }
   }, [user, authLoading, router]);
 
-  useEffect(() => {
-    if (isDemo) {
-      setWorkspaceName(DEMO_WORKSPACES[workspaceId]?.name || "Workspace");
-    } else if (user) {
-      api.getWorkspace(workspaceId)
-        .then((ws) => setWorkspaceName(ws.name))
-        .catch(() => {});
-    }
-  }, [workspaceId, isDemo, user]);
-
-  if (authLoading) {
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -52,16 +37,19 @@ function PageDetail() {
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      <AppHeader email={user.email} isDemo={isDemo} onSignOut={signOut} />
-      
+      <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
+
       <div className="flex-1 flex overflow-hidden">
-        <Sidebar
-          workspaceId={workspaceId}
-          workspaceName={workspaceName}
-          isDemo={isDemo}
-          onTabChange={(tab) => router.push(`/workspaces/${workspaceId}?tab=${tab}`)}
-        />
-        
+        {/* Desktop Sidebar - hidden on mobile for PageEditor view */}
+        <div className="hidden md:block">
+          <Sidebar
+            workspaceId={workspaceId}
+            workspaceName={workspace?.name || "Workspace"}
+            isDemo={isDemo}
+            onTabChange={(tab) => router.push(`/workspaces/${workspaceId}?tab=${tab}`)}
+          />
+        </div>
+
         <main className="flex-1 overflow-hidden bg-background">
           <PageEditor
             pageId={pageId}
@@ -77,9 +65,5 @@ function PageDetail() {
 }
 
 export default function PagePage() {
-  return (
-    <AuthProvider>
-      <PageDetail />
-    </AuthProvider>
-  );
+  return <PageDetail />;
 }
