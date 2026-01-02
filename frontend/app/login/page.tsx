@@ -70,8 +70,8 @@ export default function LoginPage() {
         {/* Logo and title outside card */}
         <div className="text-center mb-8 animate-fade-in">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-2xl shadow-primary/25">
-              <Image src="/logo.svg" alt="Moji" width={32} height={32} className="w-8 h-8" />
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-2xl shadow-primary/25 ring-1 ring-primary/20">
+              <Image src="/logo.svg" alt="Moji" width={44} height={44} className="w-11 h-11" />
             </div>
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Welcome to Moji</h1>

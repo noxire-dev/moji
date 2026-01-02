@@ -29,8 +29,8 @@ export function AppHeader({ username, email, isDemo, onSignOut }: AppHeaderProps
     <header className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-md flex items-center justify-between px-3 md:px-4">
       {/* Left - Logo */}
       <Link href="/" className="flex items-center gap-2 md:gap-2.5 group">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow">
-          <Image src="/logo.svg" alt="Moji" width={16} height={16} className="w-4 h-4" />
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow ring-1 ring-primary/20">
+          <Image src="/logo.svg" alt="Moji" width={20} height={20} className="w-5 h-5" />
         </div>
         <span className="text-sm font-semibold tracking-tight hidden sm:inline">Moji</span>
       </Link>
