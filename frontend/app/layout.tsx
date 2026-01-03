@@ -1,4 +1,5 @@
-import { AuthProvider, ThemeProvider } from "@/app/providers";
+import { AuthProvider, ThemeProvider, NavigationLoadingProvider } from "@/app/providers";
+import { NavigationLoader } from "@/components/NavigationLoader";
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
@@ -7,11 +8,13 @@ import "./globals.css";
 const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -30,11 +33,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`} suppressHydrationWarning>
         <ThemeProvider>
           <AuthProvider>
-            {children}
+            <NavigationLoadingProvider>
+              <NavigationLoader />
+              {children}
+            </NavigationLoadingProvider>
           </AuthProvider>
           <Toaster
             theme="dark"

@@ -2,6 +2,10 @@ import { supabase } from "./supabase";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+// Token cache to avoid repeated lookups
+let cachedToken: string | null = null;
+let tokenExpiry: number = 0;
+
 // Types matching backend models
 export interface Workspace {
   id: string;
@@ -55,12 +59,35 @@ export class ApiError extends Error {
 // Generic fetch wrapper with auth
 async function apiFetch<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  token?: string | null
 ): Promise<T> {
-  const session = await supabase.auth.getSession();
-  const token = session.data.session?.access_token;
+  // Use provided token, or try cache, or fetch from supabase
+  let accessToken = token;
 
-  if (!token) {
+  if (!accessToken) {
+    // Check cache first
+    const now = Date.now();
+    if (cachedToken && now < tokenExpiry) {
+      accessToken = cachedToken;
+    } else {
+      // Fetch from supabase and cache
+      const session = await supabase.auth.getSession();
+      accessToken = session.data.session?.access_token ?? null;
+
+      if (accessToken) {
+        cachedToken = accessToken;
+        // Cache for 50 minutes (tokens typically expire in 1 hour)
+        tokenExpiry = now + 50 * 60 * 1000;
+      }
+    }
+  } else {
+    // Update cache when token is provided
+    cachedToken = accessToken;
+    tokenExpiry = Date.now() + 50 * 60 * 1000;
+  }
+
+  if (!accessToken) {
     throw new ApiError(401, "Not authenticated");
   }
 
@@ -68,7 +95,7 @@ async function apiFetch<T>(
     ...options,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${accessToken}`,
       ...options.headers,
     },
   });
@@ -90,157 +117,163 @@ async function apiFetch<T>(
 // Workspace API
 // ============================================
 
-export async function getWorkspaces(): Promise<Workspace[]> {
-  return apiFetch<Workspace[]>("/workspaces");
+export async function getWorkspaces(token?: string | null): Promise<Workspace[]> {
+  return apiFetch<Workspace[]>("/workspaces", {}, token);
 }
 
-export async function getWorkspace(id: string): Promise<Workspace> {
-  return apiFetch<Workspace>(`/workspaces/${id}`);
+export async function getWorkspace(id: string, token?: string | null): Promise<Workspace> {
+  return apiFetch<Workspace>(`/workspaces/${id}`, {}, token);
 }
 
 export async function createWorkspace(data: {
   name: string;
   description?: string;
-}): Promise<Workspace> {
+}, token?: string | null): Promise<Workspace> {
   return apiFetch<Workspace>("/workspaces", {
     method: "POST",
     body: JSON.stringify(data),
-  });
+  }, token);
 }
 
 export async function updateWorkspace(
   id: string,
-  data: { name?: string; description?: string }
+  data: { name?: string; description?: string },
+  token?: string | null
 ): Promise<Workspace> {
   return apiFetch<Workspace>(`/workspaces/${id}`, {
     method: "PUT",
     body: JSON.stringify(data),
-  });
+  }, token);
 }
 
-export async function deleteWorkspace(id: string): Promise<void> {
+export async function deleteWorkspace(id: string, token?: string | null): Promise<void> {
   return apiFetch<void>(`/workspaces/${id}`, {
     method: "DELETE",
-  });
+  }, token);
 }
 
 // ============================================
 // Task API
 // ============================================
 
-export async function getTasks(workspaceId: string): Promise<Task[]> {
-  return apiFetch<Task[]>(`/workspaces/${workspaceId}/tasks`);
+export async function getTasks(workspaceId: string, token?: string | null): Promise<Task[]> {
+  return apiFetch<Task[]>(`/workspaces/${workspaceId}/tasks`, {}, token);
 }
 
-export async function getTask(taskId: string): Promise<Task> {
-  return apiFetch<Task>(`/tasks/${taskId}`);
+export async function getTask(taskId: string, token?: string | null): Promise<Task> {
+  return apiFetch<Task>(`/tasks/${taskId}`, {}, token);
 }
 
 export async function createTask(
   workspaceId: string,
-  data: { content: string; priority?: number }
+  data: { content: string; priority?: number },
+  token?: string | null
 ): Promise<Task> {
   return apiFetch<Task>(`/workspaces/${workspaceId}/tasks`, {
     method: "POST",
     body: JSON.stringify(data),
-  });
+  }, token);
 }
 
 export async function updateTask(
   taskId: string,
-  data: { content?: string; done?: boolean; priority?: number }
+  data: { content?: string; done?: boolean; priority?: number },
+  token?: string | null
 ): Promise<Task> {
   return apiFetch<Task>(`/tasks/${taskId}`, {
     method: "PUT",
     body: JSON.stringify(data),
-  });
+  }, token);
 }
 
-export async function toggleTask(taskId: string): Promise<Task> {
+export async function toggleTask(taskId: string, token?: string | null): Promise<Task> {
   return apiFetch<Task>(`/tasks/${taskId}/toggle`, {
     method: "PATCH",
-  });
+  }, token);
 }
 
-export async function deleteTask(taskId: string): Promise<void> {
+export async function deleteTask(taskId: string, token?: string | null): Promise<void> {
   return apiFetch<void>(`/tasks/${taskId}`, {
     method: "DELETE",
-  });
+  }, token);
 }
 
 // ============================================
 // Note API
 // ============================================
 
-export async function getNotes(workspaceId: string): Promise<Note[]> {
-  return apiFetch<Note[]>(`/workspaces/${workspaceId}/notes`);
+export async function getNotes(workspaceId: string, token?: string | null): Promise<Note[]> {
+  return apiFetch<Note[]>(`/workspaces/${workspaceId}/notes`, {}, token);
 }
 
-export async function getNote(noteId: string): Promise<Note> {
-  return apiFetch<Note>(`/notes/${noteId}`);
+export async function getNote(noteId: string, token?: string | null): Promise<Note> {
+  return apiFetch<Note>(`/notes/${noteId}`, {}, token);
 }
 
 export async function createNote(
   workspaceId: string,
-  data: { title: string; content?: string; tags?: string[] }
+  data: { title: string; content?: string; tags?: string[] },
+  token?: string | null
 ): Promise<Note> {
   return apiFetch<Note>(`/workspaces/${workspaceId}/notes`, {
     method: "POST",
     body: JSON.stringify(data),
-  });
+  }, token);
 }
 
 export async function updateNote(
   noteId: string,
-  data: { title?: string; content?: string; tags?: string[] }
+  data: { title?: string; content?: string; tags?: string[] },
+  token?: string | null
 ): Promise<Note> {
   return apiFetch<Note>(`/notes/${noteId}`, {
     method: "PUT",
     body: JSON.stringify(data),
-  });
+  }, token);
 }
 
-export async function deleteNote(noteId: string): Promise<void> {
+export async function deleteNote(noteId: string, token?: string | null): Promise<void> {
   return apiFetch<void>(`/notes/${noteId}`, {
     method: "DELETE",
-  });
+  }, token);
 }
 
 // ============================================
 // Page API
 // ============================================
 
-export async function getPages(workspaceId: string): Promise<Page[]> {
-  return apiFetch<Page[]>(`/workspaces/${workspaceId}/pages`);
+export async function getPages(workspaceId: string, token?: string | null): Promise<Page[]> {
+  return apiFetch<Page[]>(`/workspaces/${workspaceId}/pages`, {}, token);
 }
 
-export async function getPage(pageId: string): Promise<Page> {
-  return apiFetch<Page>(`/pages/${pageId}`);
+export async function getPage(pageId: string, token?: string | null): Promise<Page> {
+  return apiFetch<Page>(`/pages/${pageId}`, {}, token);
 }
 
 export async function createPage(
   workspaceId: string,
-  data: { title: string; content?: string }
+  data: { title: string; content?: string },
+  token?: string | null
 ): Promise<Page> {
   return apiFetch<Page>(`/workspaces/${workspaceId}/pages`, {
     method: "POST",
     body: JSON.stringify(data),
-  });
+  }, token);
 }
 
 export async function updatePage(
   pageId: string,
-  data: { title?: string; content?: string }
+  data: { title?: string; content?: string },
+  token?: string | null
 ): Promise<Page> {
   return apiFetch<Page>(`/pages/${pageId}`, {
     method: "PUT",
     body: JSON.stringify(data),
-  });
+  }, token);
 }
 
-export async function deletePage(pageId: string): Promise<void> {
+export async function deletePage(pageId: string, token?: string | null): Promise<void> {
   return apiFetch<void>(`/pages/${pageId}`, {
     method: "DELETE",
-  });
+  }, token);
 }
-

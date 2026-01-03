@@ -1,6 +1,6 @@
 <div align="center">
 
-# <img src="logo.svg" alt="Moji" width="32" height="32" style="vertical-align: middle;" /> Moji
+# <img src="logo2.svg" alt="Moji" width="32" height="32" style="vertical-align: middle;" /> Moji
 
 **A workspace-centric productivity app for developers**
 
@@ -35,12 +35,14 @@ Notion is great, but sometimes you just want a **focused space** for a project �
 ## 🛠️ Tech Stack
 
 ### Backend
+
 - **FastAPI** — Modern, fast Python web framework
 - **Supabase** — PostgreSQL database with real-time capabilities
 - **Pydantic** — Data validation and settings management
 - **Python-JOSE** — JWT authentication
 
 ### Frontend
+
 - **Next.js 14** — React framework with App Router
 - **TypeScript** — Type-safe development
 - **Tailwind CSS** — Utility-first styling
@@ -49,6 +51,7 @@ Notion is great, but sometimes you just want a **focused space** for a project �
 - **Sonner** — Beautiful toast notifications
 
 ### Infrastructure
+
 - **Supabase** — Database, authentication, and storage
 - **PostgreSQL** — Relational database with RLS
 
@@ -232,31 +235,37 @@ All endpoints require authentication via Bearer token (Supabase JWT) in the `Aut
 ## 🎨 Features in Detail
 
 ### Workspaces
+
 Create project-specific spaces to organize your work. Each workspace contains its own tasks, notes, and pages.
 
 ### Tasks
+
 - Quick todos with content
 - Priority levels: none, low, medium, high
 - Toggle completion status
 - Organized by workspace
 
 ### Notes
+
 - Titled notes with rich content
 - Tag support for organization
 - Quick access from workspace sidebar
 
 ### Pages
+
 - Rich text pages for detailed documentation
 - Full-page editor with auto-save
 - Organized within workspaces
 - Perfect for project documentation
 
 ### Themes
+
 - **Default** — Clean dark theme with blue accents
 - **Japanese Pastel** — Soft lavender and sakura tones with paper texture
 - More themes coming soon!
 
 ### Security
+
 - Row-level security (RLS) ensures users only see their own data
 - JWT-based authentication via Supabase
 - Secure API endpoints with user verification

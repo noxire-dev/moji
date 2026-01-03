@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, usePathname } from "next/navigation";
 import { LogOut, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -12,6 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useNavigationLoading } from "@/app/providers";
 
 interface AppHeaderProps {
   username?: string;
@@ -21,39 +23,62 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({ username, email, isDemo, onSignOut }: AppHeaderProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const { setLoading } = useNavigationLoading();
   // Fallback: username -> email prefix -> "guest"
   const displayName = username || email?.split('@')[0] || "guest";
   const initials = displayName.slice(0, 2).toUpperCase();
 
+  const handleLinkClick = (href: string) => {
+    // Don't navigate if we're already on that page
+    if (pathname === href) {
+      return;
+    }
+    setLoading(true);
+    router.push(href);
+  };
+
   return (
-    <header className="h-14 border-b border-border/50 bg-card/50 backdrop-blur-md flex items-center justify-between px-3 md:px-4">
+    <header className="h-14 min-h-[3.5rem] border-b border-border/50 bg-card/50 backdrop-blur-md flex items-center justify-between px-3 md:px-4">
       {/* Left - Logo */}
-      <Link href="/" className="flex items-center gap-2 md:gap-2.5 group">
-        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow ring-1 ring-primary/20">
-          <Image src="/logo.svg" alt="Moji" width={20} height={20} className="w-5 h-5" />
+      <Link href="/" className="flex items-center gap-2 md:gap-2.5 group flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/30 transition-shadow ring-1 ring-primary/20 flex-shrink-0">
+          <Image
+            src="/logo.svg"
+            alt="Moji"
+            width={20}
+            height={20}
+            className="w-5 h-5 flex-shrink-0"
+            priority
+            unoptimized
+            style={{ width: '20px', height: '20px', display: 'block' }}
+          />
         </div>
-        <span className="text-sm font-semibold tracking-tight hidden sm:inline">Moji</span>
+        <span className="text-sm font-semibold tracking-tight hidden sm:inline flex-shrink-0">Moji</span>
       </Link>
 
       {/* Center - Demo Badge */}
-      {isDemo && (
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          <span className="text-xs font-medium text-primary">Demo Mode</span>
-        </div>
-      )}
+      <div className="flex-1 flex items-center justify-center">
+        {isDemo && (
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 flex-shrink-0">
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse flex-shrink-0" />
+            <span className="text-xs font-medium text-primary whitespace-nowrap">Demo Mode</span>
+          </div>
+        )}
+      </div>
 
       {/* Right - User Menu */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 rounded-full hover:bg-accent"
+              className="h-9 w-9 min-h-[2.25rem] min-w-[2.25rem] rounded-full hover:bg-accent flex-shrink-0"
             >
-              <Avatar className="h-8 w-8 border border-border">
-                <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-medium">
+              <Avatar className="h-8 w-8 min-h-[2rem] min-w-[2rem] border border-border flex-shrink-0">
+                <AvatarFallback className="text-xs bg-gradient-to-br from-primary/20 to-primary/10 text-primary font-medium flex-shrink-0">
                   {initials}
                 </AvatarFallback>
               </Avatar>
@@ -67,17 +92,19 @@ export function AppHeader({ username, email, isDemo, onSignOut }: AppHeaderProps
               </p>
             </div>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="cursor-pointer" asChild>
-              <Link href="/profile">
-                <User className="w-4 h-4 mr-2 text-muted-foreground" />
-                Profile
-              </Link>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => handleLinkClick("/profile")}
+            >
+              <User className="w-4 h-4 mr-2 text-muted-foreground" />
+              Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer" asChild>
-              <Link href="/settings">
-                <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
-                Settings
-              </Link>
+            <DropdownMenuItem
+              className="cursor-pointer"
+              onClick={() => handleLinkClick("/settings")}
+            >
+              <Settings className="w-4 h-4 mr-2 text-muted-foreground" />
+              Settings
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={onSignOut}

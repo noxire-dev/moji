@@ -98,6 +98,9 @@ export function getThemeById(id: string): Theme {
 
 // Apply theme variables to document root
 export function applyTheme(theme: Theme): void {
+  // Only run on client side
+  if (typeof window === 'undefined') return;
+
   const root = document.documentElement;
 
   // First, remove any previously applied theme variables
@@ -113,12 +116,14 @@ export function applyTheme(theme: Theme): void {
     root.style.setProperty(key, value);
   }
 
-  // Handle paper texture class
-  if (theme.hasPaperTexture) {
-    root.classList.add("theme-paper-texture");
-  } else {
-    root.classList.remove("theme-paper-texture");
-  }
+  // Handle paper texture class - use requestAnimationFrame to avoid hydration issues
+  requestAnimationFrame(() => {
+    if (theme.hasPaperTexture) {
+      root.classList.add("theme-paper-texture");
+    } else {
+      root.classList.remove("theme-paper-texture");
+    }
+  });
 }
 
 // Storage key for persisting theme choice

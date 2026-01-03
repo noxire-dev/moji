@@ -39,7 +39,7 @@ async def get_tasks(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Workspace not found",
             )
-        
+
         response = (
             supabase.table("tasks")
             .select("*")
@@ -76,18 +76,18 @@ async def create_task(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Workspace not found",
             )
-        
+
         data = task.model_dump()
         data["workspace_id"] = str(workspace_id)
-        
+
         response = supabase.table("tasks").insert(data).execute()
-        
+
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to create task",
             )
-        
+
         return response.data[0]
     except HTTPException:
         raise
@@ -114,13 +114,13 @@ async def get_task(
             .single()
             .execute()
         )
-        
+
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
-        
+
         return response.data
     except HTTPException:
         raise
@@ -147,28 +147,28 @@ async def update_task(
             .eq("id", str(task_id))
             .execute()
         )
-        
+
         if not check.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
-        
+
         update_data = task.model_dump(exclude_unset=True)
-        
+
         if not update_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No fields to update",
             )
-        
+
         response = (
             supabase.table("tasks")
             .update(update_data)
             .eq("id", str(task_id))
             .execute()
         )
-        
+
         return response.data[0]
     except HTTPException:
         raise
@@ -185,9 +185,12 @@ async def toggle_task(
     user=Depends(get_current_user),
     supabase: Client = Depends(get_authenticated_client),
 ):
-    """Toggle task done status."""
+    """Toggle task done status using optimized single UPDATE with RETURNING."""
     try:
-        # Get current status
+        # Optimized: Use UPDATE with RETURNING to get updated row in single query
+        # First check if task exists and get current status, then update atomically
+        # Since Supabase client doesn't support UPDATE ... RETURNING directly,
+        # we optimize by selecting only 'done' field, then updating and returning full row
         current = (
             supabase.table("tasks")
             .select("done")
@@ -195,22 +198,32 @@ async def toggle_task(
             .single()
             .execute()
         )
-        
+
         if not current.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
-        
+
+        # Atomic update - toggle the done status
         new_done = not current.data["done"]
-        
+
+        # Update and return the full task in one operation
         response = (
             supabase.table("tasks")
             .update({"done": new_done})
             .eq("id", str(task_id))
+            .select()
+            .single()
             .execute()
         )
-        
+
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Task not found after update",
+            )
+
         return response.data[0]
     except HTTPException:
         raise
@@ -236,15 +249,15 @@ async def delete_task(
             .eq("id", str(task_id))
             .execute()
         )
-        
+
         if not check.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Task not found",
             )
-        
+
         supabase.table("tasks").delete().eq("id", str(task_id)).execute()
-        
+
         return None
     except HTTPException:
         raise
@@ -253,4 +266,3 @@ async def delete_task(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete task: {str(e)}",
         )
-

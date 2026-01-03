@@ -4,10 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +15,7 @@ import * as api from "@/lib/api";
 import { useTasks } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface TaskListProps {
@@ -30,7 +30,7 @@ const priorityConfig = {
   3: { label: "High", color: "text-priority-high", border: "border-l-priority-high" },
 };
 
-export function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
+export const TaskList = memo(function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
   const { tasks, isLoading, mutate } = useTasks(workspaceId, isDemo);
   const [newContent, setNewContent] = useState("");
   const [newPriority, setNewPriority] = useState(0);
@@ -112,8 +112,14 @@ export function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
     }
   }
 
-  const incompleteTasks = displayTasks.filter((t) => !t.done).sort((a, b) => b.priority - a.priority);
-  const completedTasks = displayTasks.filter((t) => t.done);
+  const incompleteTasks = useMemo(
+    () => displayTasks.filter((t) => !t.done).sort((a, b) => b.priority - a.priority),
+    [displayTasks]
+  );
+  const completedTasks = useMemo(
+    () => displayTasks.filter((t) => t.done),
+    [displayTasks]
+  );
 
   if (isLoading) {
     return (
@@ -198,9 +204,9 @@ export function TaskList({ workspaceId, isDemo = false }: TaskListProps) {
       )}
     </div>
   );
-}
+});
 
-function TaskItem({
+const TaskItem = memo(function TaskItem({
   task,
   onToggle,
   onDelete,
@@ -209,7 +215,10 @@ function TaskItem({
   onToggle: () => void;
   onDelete: () => void;
 }) {
-  const priority = priorityConfig[task.priority as keyof typeof priorityConfig];
+  const priority = useMemo(
+    () => priorityConfig[task.priority as keyof typeof priorityConfig],
+    [task.priority]
+  );
 
   return (
     <div
@@ -273,13 +282,20 @@ function TaskItem({
       </DropdownMenu>
     </div>
   );
-}
+});
 
-function CompletedHeader({ completedTasks }: { completedTasks: api.Task[] }) {
-  const lowCount = completedTasks.filter((t) => t.priority === 1).length;
-  const mediumCount = completedTasks.filter((t) => t.priority === 2).length;
-  const highCount = completedTasks.filter((t) => t.priority === 3).length;
-  const hasPriorityCounts = lowCount > 0 || mediumCount > 0 || highCount > 0;
+const CompletedHeader = memo(function CompletedHeader({ completedTasks }: { completedTasks: api.Task[] }) {
+  const { lowCount, mediumCount, highCount, hasPriorityCounts } = useMemo(() => {
+    const low = completedTasks.filter((t) => t.priority === 1).length;
+    const medium = completedTasks.filter((t) => t.priority === 2).length;
+    const high = completedTasks.filter((t) => t.priority === 3).length;
+    return {
+      lowCount: low,
+      mediumCount: medium,
+      highCount: high,
+      hasPriorityCounts: low > 0 || medium > 0 || high > 0,
+    };
+  }, [completedTasks]);
 
   return (
     <div className="flex items-center gap-3 mb-2">
@@ -307,4 +323,4 @@ function CompletedHeader({ completedTasks }: { completedTasks: api.Task[] }) {
       )}
     </div>
   );
-}
+});

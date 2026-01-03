@@ -3,24 +3,26 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as api from "@/lib/api";
 import { useWorkspaces } from "@/lib/hooks";
+import { useNavigationLoading } from "@/app/providers";
 import { Folder, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -183,9 +185,18 @@ function WorkspaceCard({
   onDelete: () => void;
   isDemo: boolean;
 }) {
+  const router = useRouter();
+  const { setLoading } = useNavigationLoading();
+
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    router.push(`/workspaces/${workspace.id}`);
+  };
+
   return (
     <Card className="group relative hover:bg-accent/50 transition-colors">
-      <Link href={`/workspaces/${workspace.id}`}>
+      <Link href={`/workspaces/${workspace.id}`} onClick={handleClick}>
         <CardContent className="p-5">
           <div className="flex items-start gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">

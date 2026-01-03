@@ -2,22 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/app/providers";
+import { useAuth, useNavigationLoading } from "@/app/providers";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileSidebar } from "@/components/MobileSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { TaskList } from "@/components/TaskList";
 import { NoteList } from "@/components/NoteList";
-import { useWorkspace } from "@/lib/hooks";
+import { useWorkspace, useTasks, useNotes, usePages, usePrefetchWorkspaceData } from "@/lib/hooks";
 
 function WorkspaceDetail() {
   const { user, loading: authLoading, signOut, isDemo } = useAuth();
+  const { setLoading } = useNavigationLoading();
   const router = useRouter();
   const params = useParams();
   const workspaceId = params.id as string;
 
-  const { workspace, isLoading } = useWorkspace(workspaceId, isDemo);
+  const { workspace, isLoading: workspaceLoading } = useWorkspace(workspaceId, isDemo);
+  const { tasks, isLoading: tasksLoading } = useTasks(workspaceId, isDemo);
+  const { notes, isLoading: notesLoading } = useNotes(workspaceId, isDemo);
+  const { pages, isLoading: pagesLoading } = usePages(workspaceId, isDemo);
   const [activeTab, setActiveTab] = useState<"tasks" | "notes">("tasks");
+
+  // Prefetch notes and pages in background (non-blocking)
+  usePrefetchWorkspaceData(workspaceId, isDemo);
+
+  // Progressive loading: show content as soon as workspace and tasks are loaded
+  const isLoading = workspaceLoading || (activeTab === "tasks" && tasksLoading);
+
+  // Use navbar loader for workspace/data loading
+  useEffect(() => {
+    setLoading(isLoading);
+  }, [isLoading, setLoading]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -25,7 +40,8 @@ function WorkspaceDetail() {
     }
   }, [user, authLoading, router]);
 
-  if (authLoading || isLoading) {
+  // Only show full page spinner for initial auth loading
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -33,8 +49,20 @@ function WorkspaceDetail() {
     );
   }
 
-  if (!user || !workspace) {
+  if (!user) {
     return null;
+  }
+
+  // Show skeleton/loading state while workspace is loading, but use navbar loader
+  if (!workspace) {
+    return (
+      <div className="h-screen flex flex-col bg-background">
+        <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-sm text-muted-foreground">Loading workspace...</div>
+        </div>
+      </div>
+    );
   }
 
   return (

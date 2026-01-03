@@ -15,7 +15,7 @@ import * as api from "@/lib/api";
 import { usePage } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, Columns2, Maximize2, Save, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface PageEditorProps {
@@ -226,7 +226,7 @@ export function PageEditor({
               </div>
               <ScrollArea className="flex-1">
                 <div className="p-4 prose max-w-none">
-                  <MarkdownPreview content={content} />
+                  <DebouncedMarkdownPreview content={content} />
                 </div>
               </ScrollArea>
             </div>
@@ -237,33 +237,49 @@ export function PageEditor({
   );
 }
 
-// Markdown preview with real-time rendering
-function MarkdownPreview({ content }: { content: string }) {
-  if (!content.trim()) {
-    return <p className="text-muted-foreground italic">Start typing to see preview...</p>;
-  }
+// Debounced markdown preview component
+function DebouncedMarkdownPreview({ content }: { content: string }) {
+  const [debouncedContent, setDebouncedContent] = useState(content);
 
-  const lines = content.split("\n");
-  const elements: React.ReactNode[] = [];
-  let inCodeBlock = false;
-  let codeContent = "";
-  let codeLanguage = "";
-  let listItems: React.ReactNode[] = [];
-  let listType: "ul" | "ol" | null = null;
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedContent(content);
+    }, 300); // 300ms debounce delay
 
-  function flushList() {
-    if (listItems.length > 0) {
-      if (listType === "ul") {
-        elements.push(<ul key={`list-${elements.length}`} className="my-4 pl-6 list-disc">{listItems}</ul>);
-      } else {
-        elements.push(<ol key={`list-${elements.length}`} className="my-4 pl-6 list-decimal">{listItems}</ol>);
-      }
-      listItems = [];
-      listType = null;
+    return () => clearTimeout(timer);
+  }, [content]);
+
+  return <MarkdownPreview content={debouncedContent} />;
+}
+
+// Markdown preview with memoized rendering
+const MarkdownPreview = memo(function MarkdownPreview({ content }: { content: string }) {
+  const parsedContent = useMemo(() => {
+    if (!content.trim()) {
+      return <p className="text-muted-foreground italic">Start typing to see preview...</p>;
     }
-  }
 
-  lines.forEach((line, i) => {
+    const lines = content.split("\n");
+    const elements: React.ReactNode[] = [];
+    let inCodeBlock = false;
+    let codeContent = "";
+    let codeLanguage = "";
+    let listItems: React.ReactNode[] = [];
+    let listType: "ul" | "ol" | null = null;
+
+    function flushList() {
+      if (listItems.length > 0) {
+        if (listType === "ul") {
+          elements.push(<ul key={`list-${elements.length}`} className="my-4 pl-6 list-disc">{listItems}</ul>);
+        } else {
+          elements.push(<ol key={`list-${elements.length}`} className="my-4 pl-6 list-decimal">{listItems}</ol>);
+        }
+        listItems = [];
+        listType = null;
+      }
+    }
+
+    lines.forEach((line, i) => {
     // Code block handling
     if (line.startsWith("```")) {
       if (inCodeBlock) {
@@ -348,15 +364,21 @@ function MarkdownPreview({ content }: { content: string }) {
       return;
     }
 
-    // Paragraph
+      // Paragraph
+      flushList();
+      elements.push(<p key={i} className="my-3 leading-relaxed">{formatInline(line)}</p>);
+    });
+
     flushList();
-    elements.push(<p key={i} className="my-3 leading-relaxed">{formatInline(line)}</p>);
-  });
 
-  flushList();
+    return <>{elements}</>;
+  }, [content]);
 
-  return <>{elements}</>;
-}
+  return parsedContent;
+});
+
+  return parsedContent;
+});
 
 function formatInline(text: string): React.ReactNode {
   // Process inline formatting

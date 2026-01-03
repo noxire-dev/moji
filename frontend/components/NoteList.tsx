@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import * as api from "@/lib/api";
 import { useNotes } from "@/lib/hooks";
 import { Plus, Tag, Trash2, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface NoteListProps {
@@ -23,7 +23,7 @@ interface NoteListProps {
   isDemo?: boolean;
 }
 
-export function NoteList({ workspaceId, isDemo = false }: NoteListProps) {
+export const NoteList = memo(function NoteList({ workspaceId, isDemo = false }: NoteListProps) {
   const { notes, isLoading, mutate } = useNotes(workspaceId, isDemo);
   const [showCreate, setShowCreate] = useState(false);
   const [selectedNote, setSelectedNote] = useState<api.Note | null>(null);
@@ -173,9 +173,9 @@ export function NoteList({ workspaceId, isDemo = false }: NoteListProps) {
       )}
     </div>
   );
-}
+});
 
-function NoteCard({
+const NoteCard = memo(function NoteCard({
   note,
   onClick,
   onDelete,
@@ -228,7 +228,7 @@ function NoteCard({
       </CardContent>
     </Card>
   );
-}
+});
 
 function NoteDialog({
   open,

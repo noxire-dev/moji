@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { supabase, AuthUser } from "@/lib/supabase";
 import { Session } from "@supabase/supabase-js";
 import { Theme, themes, defaultTheme, getThemeById, applyTheme, THEME_STORAGE_KEY } from "@/lib/themes";
+import { usePathname } from "next/navigation";
 
 // ============================================================================
 // Auth Context
@@ -39,6 +40,20 @@ const ThemeContext = createContext<ThemeContextType>({
   theme: defaultTheme,
   themes: themes,
   setTheme: () => {},
+});
+
+// ============================================================================
+// Navigation Loading Context
+// ============================================================================
+
+interface NavigationLoadingContextType {
+  isLoading: boolean;
+  setLoading: (loading: boolean) => void;
+}
+
+const NavigationLoadingContext = createContext<NavigationLoadingContextType>({
+  isLoading: false,
+  setLoading: () => {},
 });
 
 // Demo user for UI preview
@@ -104,6 +119,13 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
+// Hook to get access token for API calls
+export function useAccessToken(): string | null {
+  const { session, isDemo } = useAuth();
+  if (isDemo) return null; // Demo mode doesn't need auth
+  return session?.access_token ?? null;
+}
+
 // ============================================================================
 // Theme Provider
 // ============================================================================
@@ -112,18 +134,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [currentTheme, setCurrentTheme] = useState<Theme>(defaultTheme);
   const [mounted, setMounted] = useState(false);
 
-  // Load theme from localStorage on mount
+  // Load theme from localStorage on mount (client-side only)
   useEffect(() => {
     setMounted(true);
     const savedThemeId = localStorage.getItem(THEME_STORAGE_KEY);
     if (savedThemeId) {
       const theme = getThemeById(savedThemeId);
       setCurrentTheme(theme);
-      applyTheme(theme);
+      // Apply theme after a small delay to ensure DOM is ready
+      setTimeout(() => {
+        applyTheme(theme);
+      }, 0);
+    } else {
+      // Apply default theme on mount
+      setTimeout(() => {
+        applyTheme(defaultTheme);
+      }, 0);
     }
   }, []);
 
-  // Apply theme when it changes
+  // Apply theme when it changes (only after mount)
   useEffect(() => {
     if (mounted) {
       applyTheme(currentTheme);
@@ -145,4 +175,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useTheme() {
   return useContext(ThemeContext);
+}
+
+// ============================================================================
+// Navigation Loading Provider
+// ============================================================================
+
+export function NavigationLoadingProvider({ children }: { children: React.ReactNode }) {
+  const [isLoading, setIsLoading] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    // Reset loading when pathname changes
+    setIsLoading(false);
+  }, [pathname]);
+
+  return (
+    <NavigationLoadingContext.Provider value={{ isLoading, setLoading: setIsLoading }}>
+      {children}
+    </NavigationLoadingContext.Provider>
+  );
+}
+
+export function useNavigationLoading() {
+  return useContext(NavigationLoadingContext);
 }

@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 interface SidebarProps {
@@ -34,7 +34,7 @@ interface SidebarProps {
   onNewNote?: () => void;
 }
 
-export function Sidebar({
+export const Sidebar = memo(function Sidebar({
   workspaceId,
   workspaceName,
   isDemo = false,
@@ -47,8 +47,14 @@ export function Sidebar({
   const { pages, isLoading, mutate } = usePages(workspaceId, isDemo);
   const [localPages, setLocalPages] = useState<api.Page[] | null>(null);
 
-  const displayPages = isDemo && localPages ? localPages : pages;
-  const isOnPage = pathname.includes("/pages/");
+  const displayPages = useMemo(
+    () => isDemo && localPages ? localPages : pages,
+    [isDemo, localPages, pages]
+  );
+  const isOnPage = useMemo(
+    () => pathname.includes("/pages/"),
+    [pathname]
+  );
 
   // Initialize local pages from SWR data for demo mode
   if (isDemo && localPages === null && pages.length > 0) {
@@ -80,7 +86,7 @@ export function Sidebar({
     }
   }
 
-  const navItems = [
+  const navItems = useMemo(() => [
     {
       id: "tasks" as const,
       icon: CheckSquare,
@@ -91,7 +97,7 @@ export function Sidebar({
       icon: FileText,
       label: "Notes",
     },
-  ];
+  ], []);
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -206,4 +212,4 @@ export function Sidebar({
       </div>
     </TooltipProvider>
   );
-}
+});

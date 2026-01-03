@@ -1,3 +1,4 @@
+import { useAccessToken } from "@/app/providers";
 import useSWR from "swr";
 import * as api from "./api";
 
@@ -56,12 +57,15 @@ const DEMO_PAGES: api.Page[] = [
 // ============================================
 
 export function useWorkspaces(isDemo: boolean = false) {
+  const token = useAccessToken();
   const { data, error, isLoading, mutate } = useSWR(
     isDemo ? null : "workspaces",
-    () => api.getWorkspaces(),
+    () => api.getWorkspaces(token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 5000,
+      dedupingInterval: 10000,
+      revalidateOnReconnect: true,
+      keepPreviousData: true,
     }
   );
 
@@ -74,12 +78,15 @@ export function useWorkspaces(isDemo: boolean = false) {
 }
 
 export function useWorkspace(id: string, isDemo: boolean = false) {
+  const token = useAccessToken();
   const { data, error, isLoading, mutate } = useSWR(
     isDemo ? null : `workspace-${id}`,
-    () => api.getWorkspace(id),
+    () => api.getWorkspace(id, token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 5000,
+      dedupingInterval: 10000,
+      revalidateOnReconnect: true,
+      keepPreviousData: true,
     }
   );
 
@@ -105,12 +112,15 @@ export function useWorkspace(id: string, isDemo: boolean = false) {
 // ============================================
 
 export function useTasks(workspaceId: string, isDemo: boolean = false) {
+  const token = useAccessToken();
   const { data, error, isLoading, mutate } = useSWR(
     isDemo ? null : `tasks-${workspaceId}`,
-    () => api.getTasks(workspaceId),
+    () => api.getTasks(workspaceId, token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 2000,
+      dedupingInterval: 5000,
+      revalidateOnReconnect: true,
+      keepPreviousData: true,
     }
   );
 
@@ -124,17 +134,46 @@ export function useTasks(workspaceId: string, isDemo: boolean = false) {
   };
 }
 
+// Hook to prefetch notes and pages in background
+export function usePrefetchWorkspaceData(workspaceId: string, isDemo: boolean = false) {
+  const token = useAccessToken();
+
+  // Prefetch notes and pages when workspace is loaded (non-blocking)
+  useSWR(
+    isDemo || !workspaceId ? null : `notes-${workspaceId}`,
+    () => api.getNotes(workspaceId, token),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 10000,
+      revalidateOnReconnect: true,
+    }
+  );
+
+  useSWR(
+    isDemo || !workspaceId ? null : `pages-${workspaceId}`,
+    () => api.getPages(workspaceId, token),
+    {
+      revalidateOnFocus: false,
+      dedupingInterval: 10000,
+      revalidateOnReconnect: true,
+    }
+  );
+}
+
 // ============================================
 // Notes Hooks
 // ============================================
 
 export function useNotes(workspaceId: string, isDemo: boolean = false) {
+  const token = useAccessToken();
   const { data, error, isLoading, mutate } = useSWR(
     isDemo ? null : `notes-${workspaceId}`,
-    () => api.getNotes(workspaceId),
+    () => api.getNotes(workspaceId, token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 2000,
+      dedupingInterval: 5000,
+      revalidateOnReconnect: true,
+      keepPreviousData: true,
     }
   );
 
@@ -153,12 +192,15 @@ export function useNotes(workspaceId: string, isDemo: boolean = false) {
 // ============================================
 
 export function usePages(workspaceId: string, isDemo: boolean = false) {
+  const token = useAccessToken();
   const { data, error, isLoading, mutate } = useSWR(
     isDemo ? null : `pages-${workspaceId}`,
-    () => api.getPages(workspaceId),
+    () => api.getPages(workspaceId, token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 2000,
+      dedupingInterval: 5000,
+      revalidateOnReconnect: true,
+      keepPreviousData: true,
     }
   );
 
@@ -173,12 +215,15 @@ export function usePages(workspaceId: string, isDemo: boolean = false) {
 }
 
 export function usePage(pageId: string, isDemo: boolean = false) {
+  const token = useAccessToken();
   const { data, error, isLoading, mutate } = useSWR(
     isDemo ? null : `page-${pageId}`,
-    () => api.getPage(pageId),
+    () => api.getPage(pageId, token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 2000,
+      dedupingInterval: 5000,
+      revalidateOnReconnect: true,
+      keepPreviousData: true,
     }
   );
 
@@ -198,7 +243,3 @@ export function usePage(pageId: string, isDemo: boolean = false) {
     mutate,
   };
 }
-
-
-
-

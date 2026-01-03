@@ -14,8 +14,10 @@ CREATE TABLE IF NOT EXISTS pages (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Index
+-- Indexes
 CREATE INDEX IF NOT EXISTS idx_pages_workspace_id ON pages(workspace_id);
+-- Composite index for optimized query pattern: filter by workspace and order by updated_at
+CREATE INDEX IF NOT EXISTS idx_pages_workspace_updated ON pages(workspace_id, updated_at DESC);
 
 -- Enable RLS
 ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
@@ -24,8 +26,8 @@ ALTER TABLE pages ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own pages" ON pages
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = pages.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = pages.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -33,8 +35,8 @@ CREATE POLICY "Users can view own pages" ON pages
 CREATE POLICY "Users can insert own pages" ON pages
     FOR INSERT WITH CHECK (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = pages.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = pages.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -42,8 +44,8 @@ CREATE POLICY "Users can insert own pages" ON pages
 CREATE POLICY "Users can update own pages" ON pages
     FOR UPDATE USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = pages.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = pages.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -51,14 +53,13 @@ CREATE POLICY "Users can update own pages" ON pages
 CREATE POLICY "Users can delete own pages" ON pages
     FOR DELETE USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = pages.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = pages.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
 
 -- Trigger for updated_at
-CREATE TRIGGER update_pages_updated_at 
+CREATE TRIGGER update_pages_updated_at
     BEFORE UPDATE ON pages
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-

@@ -46,6 +46,16 @@ CREATE INDEX idx_tasks_workspace_id ON tasks(workspace_id);
 CREATE INDEX idx_notes_workspace_id ON notes(workspace_id);
 CREATE INDEX idx_tasks_done ON tasks(done);
 
+-- Composite indexes for optimized query patterns
+-- Tasks: filter by workspace and done status (common in TaskList)
+CREATE INDEX idx_tasks_workspace_done ON tasks(workspace_id, done);
+
+-- Notes: filter by workspace and order by updated_at (common in NoteList)
+CREATE INDEX idx_notes_workspace_updated ON notes(workspace_id, updated_at DESC);
+
+-- Pages: filter by workspace and order by updated_at (common in Sidebar)
+CREATE INDEX idx_pages_workspace_updated ON pages(workspace_id, updated_at DESC);
+
 -- ============================================
 -- ROW LEVEL SECURITY
 -- ============================================
@@ -71,8 +81,8 @@ CREATE POLICY "Users can delete own workspaces" ON workspaces
 CREATE POLICY "Users can view own tasks" ON tasks
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = tasks.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = tasks.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -80,8 +90,8 @@ CREATE POLICY "Users can view own tasks" ON tasks
 CREATE POLICY "Users can insert own tasks" ON tasks
     FOR INSERT WITH CHECK (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = tasks.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = tasks.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -89,8 +99,8 @@ CREATE POLICY "Users can insert own tasks" ON tasks
 CREATE POLICY "Users can update own tasks" ON tasks
     FOR UPDATE USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = tasks.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = tasks.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -98,8 +108,8 @@ CREATE POLICY "Users can update own tasks" ON tasks
 CREATE POLICY "Users can delete own tasks" ON tasks
     FOR DELETE USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = tasks.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = tasks.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -108,8 +118,8 @@ CREATE POLICY "Users can delete own tasks" ON tasks
 CREATE POLICY "Users can view own notes" ON notes
     FOR SELECT USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = notes.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = notes.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -117,8 +127,8 @@ CREATE POLICY "Users can view own notes" ON notes
 CREATE POLICY "Users can insert own notes" ON notes
     FOR INSERT WITH CHECK (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = notes.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = notes.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -126,8 +136,8 @@ CREATE POLICY "Users can insert own notes" ON notes
 CREATE POLICY "Users can update own notes" ON notes
     FOR UPDATE USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = notes.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = notes.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -135,8 +145,8 @@ CREATE POLICY "Users can update own notes" ON notes
 CREATE POLICY "Users can delete own notes" ON notes
     FOR DELETE USING (
         EXISTS (
-            SELECT 1 FROM workspaces 
-            WHERE workspaces.id = notes.workspace_id 
+            SELECT 1 FROM workspaces
+            WHERE workspaces.id = notes.workspace_id
             AND workspaces.user_id = auth.uid()
         )
     );
@@ -153,15 +163,15 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_workspaces_updated_at 
+CREATE TRIGGER update_workspaces_updated_at
     BEFORE UPDATE ON workspaces
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_tasks_updated_at 
+CREATE TRIGGER update_tasks_updated_at
     BEFORE UPDATE ON tasks
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_notes_updated_at 
+CREATE TRIGGER update_notes_updated_at
     BEFORE UPDATE ON notes
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
@@ -182,4 +192,3 @@ $$ language 'plpgsql' SECURITY DEFINER;
 CREATE TRIGGER on_auth_user_created
     AFTER INSERT ON auth.users
     FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
