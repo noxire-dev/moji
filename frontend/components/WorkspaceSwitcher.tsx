@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import * as api from "@/lib/api";
+import { logger } from "@/lib/logger";
 
 interface WorkspaceSwitcherProps {
   currentWorkspaceId: string;
@@ -58,7 +59,7 @@ export function WorkspaceSwitcher({
       const data = await api.getWorkspaces();
       setWorkspaces(data);
     } catch (err) {
-      console.error("Failed to load workspaces:", err);
+      logger.error("Failed to load workspaces:", err);
     } finally {
       setLoading(false);
     }
@@ -129,4 +130,3 @@ export function WorkspaceSwitcher({
     </Popover>
   );
 }
-

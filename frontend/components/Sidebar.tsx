@@ -13,6 +13,7 @@ import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import * as api from "@/lib/api";
 import { usePages } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import {
   CheckSquare,
   File,
@@ -81,7 +82,7 @@ export const Sidebar = memo(function Sidebar({
       mutate([...pages, page], false);
       toast.success("Page created");
     } catch (err) {
-      console.error("Failed to create page:", err);
+      logger.error("Failed to create page:", err);
       toast.error("Failed to create page");
     }
   }

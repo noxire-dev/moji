@@ -62,10 +62,12 @@ export function useWorkspaces(isDemo: boolean = false) {
     isDemo ? null : "workspaces",
     () => api.getWorkspaces(token),
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 10000,
+      revalidateOnFocus: false, // Workspaces don't change frequently
+      dedupingInterval: 30000, // 30s - workspaces change infrequently
       revalidateOnReconnect: true,
       keepPreviousData: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
     }
   );
 
@@ -84,9 +86,11 @@ export function useWorkspace(id: string, isDemo: boolean = false) {
     () => api.getWorkspace(id, token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 10000,
+      dedupingInterval: 30000, // 30s - workspace metadata changes infrequently
       revalidateOnReconnect: true,
       keepPreviousData: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
     }
   );
 
@@ -117,10 +121,12 @@ export function useTasks(workspaceId: string, isDemo: boolean = false) {
     isDemo ? null : `tasks-${workspaceId}`,
     () => api.getTasks(workspaceId, token),
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 5000,
+      revalidateOnFocus: true, // Tasks can change frequently, revalidate on focus
+      dedupingInterval: 2000, // 2s - tasks change more frequently
       revalidateOnReconnect: true,
       keepPreviousData: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
     }
   );
 
@@ -144,8 +150,9 @@ export function usePrefetchWorkspaceData(workspaceId: string, isDemo: boolean = 
     () => api.getNotes(workspaceId, token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 10000,
+      dedupingInterval: 15000, // 15s for prefetch
       revalidateOnReconnect: true,
+      errorRetryCount: 2, // Fewer retries for prefetch
     }
   );
 
@@ -154,8 +161,9 @@ export function usePrefetchWorkspaceData(workspaceId: string, isDemo: boolean = 
     () => api.getPages(workspaceId, token),
     {
       revalidateOnFocus: false,
-      dedupingInterval: 10000,
+      dedupingInterval: 15000, // 15s for prefetch
       revalidateOnReconnect: true,
+      errorRetryCount: 2, // Fewer retries for prefetch
     }
   );
 }
@@ -170,10 +178,12 @@ export function useNotes(workspaceId: string, isDemo: boolean = false) {
     isDemo ? null : `notes-${workspaceId}`,
     () => api.getNotes(workspaceId, token),
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 5000,
+      revalidateOnFocus: true, // Notes can be updated, revalidate on focus
+      dedupingInterval: 5000, // 5s - notes change moderately
       revalidateOnReconnect: true,
       keepPreviousData: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
     }
   );
 
@@ -197,10 +207,12 @@ export function usePages(workspaceId: string, isDemo: boolean = false) {
     isDemo ? null : `pages-${workspaceId}`,
     () => api.getPages(workspaceId, token),
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 5000,
+      revalidateOnFocus: true, // Pages can be updated, revalidate on focus
+      dedupingInterval: 5000, // 5s - pages change moderately
       revalidateOnReconnect: true,
       keepPreviousData: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
     }
   );
 
@@ -220,10 +232,12 @@ export function usePage(pageId: string, isDemo: boolean = false) {
     isDemo ? null : `page-${pageId}`,
     () => api.getPage(pageId, token),
     {
-      revalidateOnFocus: false,
-      dedupingInterval: 5000,
+      revalidateOnFocus: true, // Active page should be fresh
+      dedupingInterval: 2000, // 2s - active page changes frequently
       revalidateOnReconnect: true,
       keepPreviousData: true,
+      errorRetryCount: 3,
+      errorRetryInterval: 1000,
     }
   );
 

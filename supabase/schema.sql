@@ -50,8 +50,20 @@ CREATE INDEX idx_tasks_done ON tasks(done);
 -- Tasks: filter by workspace and done status (common in TaskList)
 CREATE INDEX idx_tasks_workspace_done ON tasks(workspace_id, done);
 
+-- Tasks: filter by workspace, done, and priority for sorting (TaskList sorts incomplete tasks by priority)
+CREATE INDEX idx_tasks_workspace_done_priority ON tasks(workspace_id, done, priority DESC) WHERE done = false;
+
+-- Tasks: index on priority for sorting within workspace
+CREATE INDEX idx_tasks_workspace_priority ON tasks(workspace_id, priority DESC);
+
+-- Workspaces: order by creation date (common when listing workspaces)
+CREATE INDEX idx_workspaces_user_created ON workspaces(user_id, created_at DESC);
+
 -- Notes: filter by workspace and order by updated_at (common in NoteList)
 CREATE INDEX idx_notes_workspace_updated ON notes(workspace_id, updated_at DESC);
+
+-- Notes: index for tag searches (GIN index for array operations)
+CREATE INDEX idx_notes_tags ON notes USING GIN(tags);
 
 -- Pages: filter by workspace and order by updated_at (common in Sidebar)
 CREATE INDEX idx_pages_workspace_updated ON pages(workspace_id, updated_at DESC);

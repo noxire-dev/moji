@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as api from "@/lib/api";
 import { useTasks } from "@/lib/hooks";
+import { logger } from "@/lib/logger";
 import { cn } from "@/lib/utils";
 import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { memo, useMemo, useState } from "react";
@@ -75,7 +76,7 @@ export const TaskList = memo(function TaskList({ workspaceId, isDemo = false }: 
       setNewContent("");
       setNewPriority(0);
     } catch (err) {
-      console.error("Failed to create task:", err);
+      logger.error("Failed to create task:", err);
       toast.error("Failed to create task");
     }
   }
@@ -92,7 +93,7 @@ export const TaskList = memo(function TaskList({ workspaceId, isDemo = false }: 
       const updated = await api.toggleTask(taskId);
       mutate(tasks.map((t) => (t.id === taskId ? updated : t)), false);
     } catch (err) {
-      console.error("Failed to toggle task:", err);
+      logger.error("Failed to toggle task:", err);
       toast.error("Failed to update task");
     }
   }
@@ -107,7 +108,7 @@ export const TaskList = memo(function TaskList({ workspaceId, isDemo = false }: 
       await api.deleteTask(taskId);
       mutate(tasks.filter((t) => t.id !== taskId), false);
     } catch (err) {
-      console.error("Failed to delete task:", err);
+      logger.error("Failed to delete task:", err);
       toast.error("Failed to delete task");
     }
   }

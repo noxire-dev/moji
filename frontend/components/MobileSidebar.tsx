@@ -18,6 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import { toast } from "sonner";
 import { usePages } from "@/lib/hooks";
+import { logger } from "@/lib/logger";
 import * as api from "@/lib/api";
 
 interface MobileSidebarProps {
@@ -69,7 +70,7 @@ export function MobileSidebar({
       toast.success("Page created");
       setIsOpen(false);
     } catch (err) {
-      console.error("Failed to create page:", err);
+      logger.error("Failed to create page:", err);
       toast.error("Failed to create page");
     }
   }
@@ -203,8 +204,3 @@ export function MobileSidebar({
     </>
   );
 }
-
-
-
-
-

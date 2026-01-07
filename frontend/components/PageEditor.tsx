@@ -14,6 +14,7 @@ import {
 import * as api from "@/lib/api";
 import { usePage } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
+import { logger } from "@/lib/logger";
 import { ArrowLeft, Columns2, Maximize2, Save, Trash2 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -73,7 +74,7 @@ export function PageEditor({
       setHasChanges(false);
       toast.success("Page saved");
     } catch (err) {
-      console.error("Failed to save page:", err);
+      logger.error("Failed to save page:", err);
       toast.error("Failed to save page");
     } finally {
       setSaving(false);
@@ -103,7 +104,7 @@ export function PageEditor({
       toast.success("Page deleted");
       onDelete?.();
     } catch (err) {
-      console.error("Failed to delete page:", err);
+      logger.error("Failed to delete page:", err);
       toast.error("Failed to delete page");
     }
   }

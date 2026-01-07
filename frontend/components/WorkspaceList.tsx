@@ -20,6 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import * as api from "@/lib/api";
 import { useWorkspaces } from "@/lib/hooks";
 import { useNavigationLoading } from "@/app/providers";
+import { logger } from "@/lib/logger";
 import { Folder, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -58,7 +59,7 @@ export function WorkspaceList({ isDemo = false }: WorkspaceListProps) {
       setShowCreate(false);
       toast.success("Workspace created");
     } catch (err) {
-      console.error("Failed to create workspace:", err);
+      logger.error("Failed to create workspace:", err);
       toast.error("Failed to create workspace");
     }
   }
@@ -73,7 +74,7 @@ export function WorkspaceList({ isDemo = false }: WorkspaceListProps) {
       mutate(workspaces.filter((w) => w.id !== id), false);
       toast.success("Workspace deleted");
     } catch (err) {
-      console.error("Failed to delete workspace:", err);
+      logger.error("Failed to delete workspace:", err);
       toast.error("Failed to delete workspace");
     }
   }

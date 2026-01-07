@@ -4,25 +4,12 @@ from typing import List
 
 from app.dependencies import get_current_user, get_authenticated_client
 from app.models.task import Task, TaskCreate, TaskUpdate
+from app.exceptions import handle_exception
+from app.config import get_settings
+from app.utils import verify_workspace_ownership
 from supabase import Client
 
 router = APIRouter(tags=["tasks"])
-
-
-async def verify_workspace_ownership(
-    workspace_id: UUID,
-    user_id: str,
-    supabase: Client,
-) -> bool:
-    """Verify the user owns the workspace."""
-    check = (
-        supabase.table("workspaces")
-        .select("id")
-        .eq("id", str(workspace_id))
-        .eq("user_id", user_id)
-        .execute()
-    )
-    return bool(check.data)
 
 
 @router.get("/workspaces/{workspace_id}/tasks", response_model=List[Task])
@@ -51,10 +38,8 @@ async def get_tasks(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch tasks: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Fetching tasks", debug=settings.debug)
 
 
 @router.post(
@@ -92,10 +77,8 @@ async def create_task(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create task: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Creating task", debug=settings.debug)
 
 
 @router.get("/tasks/{task_id}", response_model=Task)
@@ -125,10 +108,8 @@ async def get_task(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch task: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Fetching task", debug=settings.debug)
 
 
 @router.put("/tasks/{task_id}", response_model=Task)
@@ -173,10 +154,8 @@ async def update_task(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update task: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Updating task", debug=settings.debug)
 
 
 @router.patch("/tasks/{task_id}/toggle", response_model=Task)
@@ -185,12 +164,9 @@ async def toggle_task(
     user=Depends(get_current_user),
     supabase: Client = Depends(get_authenticated_client),
 ):
-    """Toggle task done status using optimized single UPDATE with RETURNING."""
+    """Toggle task done status. Optimized to use RLS for ownership verification."""
     try:
-        # Optimized: Use UPDATE with RETURNING to get updated row in single query
-        # First check if task exists and get current status, then update atomically
-        # Since Supabase client doesn't support UPDATE ... RETURNING directly,
-        # we optimize by selecting only 'done' field, then updating and returning full row
+        # Get current state - RLS ensures we can only access tasks we own
         current = (
             supabase.table("tasks")
             .select("done")
@@ -205,10 +181,9 @@ async def toggle_task(
                 detail="Task not found",
             )
 
-        # Atomic update - toggle the done status
+        # Toggle the done status and return updated task in single operation
+        # RLS ensures only the owner can update
         new_done = not current.data["done"]
-
-        # Update and return the full task in one operation
         response = (
             supabase.table("tasks")
             .update({"done": new_done})
@@ -218,20 +193,19 @@ async def toggle_task(
             .execute()
         )
 
+        # If no data returned, task doesn't exist or RLS blocked access
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Task not found after update",
+                detail="Task not found",
             )
 
         return response.data[0]
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to toggle task: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Toggling task", debug=settings.debug)
 
 
 @router.delete("/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -262,7 +236,5 @@ async def delete_task(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete task: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Deleting task", debug=settings.debug)

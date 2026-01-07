@@ -4,25 +4,12 @@ from typing import List
 
 from app.dependencies import get_current_user, get_authenticated_client
 from app.models.note import Note, NoteCreate, NoteUpdate
+from app.exceptions import handle_exception
+from app.config import get_settings
+from app.utils import verify_workspace_ownership
 from supabase import Client
 
 router = APIRouter(tags=["notes"])
-
-
-async def verify_workspace_ownership(
-    workspace_id: UUID,
-    user_id: str,
-    supabase: Client,
-) -> bool:
-    """Verify the user owns the workspace."""
-    check = (
-        supabase.table("workspaces")
-        .select("id")
-        .eq("id", str(workspace_id))
-        .eq("user_id", user_id)
-        .execute()
-    )
-    return bool(check.data)
 
 
 @router.get("/workspaces/{workspace_id}/notes", response_model=List[Note])
@@ -39,7 +26,7 @@ async def get_notes(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Workspace not found",
             )
-        
+
         response = (
             supabase.table("notes")
             .select("*")
@@ -51,10 +38,8 @@ async def get_notes(
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch notes: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Fetching notes", debug=settings.debug)
 
 
 @router.post(
@@ -76,26 +61,24 @@ async def create_note(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Workspace not found",
             )
-        
+
         data = note.model_dump()
         data["workspace_id"] = str(workspace_id)
-        
+
         response = supabase.table("notes").insert(data).execute()
-        
+
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Failed to create note",
             )
-        
+
         return response.data[0]
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create note: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Creating note", debug=settings.debug)
 
 
 @router.get("/notes/{note_id}", response_model=Note)
@@ -114,21 +97,19 @@ async def get_note(
             .single()
             .execute()
         )
-        
+
         if not response.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Note not found",
             )
-        
+
         return response.data
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to fetch note: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Fetching note", debug=settings.debug)
 
 
 @router.put("/notes/{note_id}", response_model=Note)
@@ -147,36 +128,34 @@ async def update_note(
             .eq("id", str(note_id))
             .execute()
         )
-        
+
         if not check.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Note not found",
             )
-        
+
         update_data = note.model_dump(exclude_unset=True)
-        
+
         if not update_data:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="No fields to update",
             )
-        
+
         response = (
             supabase.table("notes")
             .update(update_data)
             .eq("id", str(note_id))
             .execute()
         )
-        
+
         return response.data[0]
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update note: {str(e)}",
-        )
+        settings = get_settings()
+        raise handle_exception(e, "Updating note", debug=settings.debug)
 
 
 @router.delete("/notes/{note_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -194,21 +173,18 @@ async def delete_note(
             .eq("id", str(note_id))
             .execute()
         )
-        
+
         if not check.data:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Note not found",
             )
-        
+
         supabase.table("notes").delete().eq("id", str(note_id)).execute()
-        
+
         return None
     except HTTPException:
         raise
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete note: {str(e)}",
-        )
-
+        settings = get_settings()
+        raise handle_exception(e, "Deleting note", debug=settings.debug)

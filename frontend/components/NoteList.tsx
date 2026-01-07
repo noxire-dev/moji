@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import * as api from "@/lib/api";
 import { useNotes } from "@/lib/hooks";
+import { logger } from "@/lib/logger";
 import { Plus, Tag, Trash2, X } from "lucide-react";
 import { memo, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -57,7 +58,7 @@ export const NoteList = memo(function NoteList({ workspaceId, isDemo = false }: 
       setShowCreate(false);
       toast.success("Note created");
     } catch (err) {
-      console.error("Failed to create note:", err);
+      logger.error("Failed to create note:", err);
       toast.error("Failed to create note");
     }
   }
@@ -78,7 +79,7 @@ export const NoteList = memo(function NoteList({ workspaceId, isDemo = false }: 
       mutate(notes.map((n) => (n.id === noteId ? updated : n)), false);
       setSelectedNote(null);
     } catch (err) {
-      console.error("Failed to update note:", err);
+      logger.error("Failed to update note:", err);
       toast.error("Failed to update note");
     }
   }
@@ -96,7 +97,7 @@ export const NoteList = memo(function NoteList({ workspaceId, isDemo = false }: 
       setSelectedNote(null);
       toast.success("Note deleted");
     } catch (err) {
-      console.error("Failed to delete note:", err);
+      logger.error("Failed to delete note:", err);
       toast.error("Failed to delete note");
     }
   }
