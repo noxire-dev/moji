@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Textarea } from "@/components/ui/textarea";
 import {
     Tooltip,
     TooltipContent,
@@ -13,11 +12,16 @@ import {
 } from "@/components/ui/tooltip";
 import * as api from "@/lib/api";
 import { usePage } from "@/lib/hooks";
-import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
-import { ArrowLeft, Columns2, Maximize2, Save, Trash2 } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { htmlToMarkdown, markdownToHtml } from "@/lib/editor";
+import { ArrowLeft, Save, Trash2, Heading1, Heading2, Heading3, List, ListOrdered, Code, Quote } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useEditor, EditorContent, Extension } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
+import { SuggestionOptions, Suggestion } from "@tiptap/suggestion";
+import { createRoot, Root } from "react-dom/client";
 
 interface PageEditorProps {
   pageId: string;
@@ -26,6 +30,227 @@ interface PageEditorProps {
   onBack: () => void;
   onDelete?: () => void;
 }
+
+// Slash menu command interface
+interface SlashCommand {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  command: (editor: any) => void;
+}
+
+// Slash menu commands
+const slashCommands: SlashCommand[] = [
+  {
+    title: "Heading 1",
+    description: "Big section heading",
+    icon: Heading1,
+    command: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+  },
+  {
+    title: "Heading 2",
+    description: "Medium section heading",
+    icon: Heading2,
+    command: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+  },
+  {
+    title: "Heading 3",
+    description: "Small section heading",
+    icon: Heading3,
+    command: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+  },
+  {
+    title: "Bullet List",
+    description: "Create a bullet list",
+    icon: List,
+    command: (editor) => editor.chain().focus().toggleBulletList().run(),
+  },
+  {
+    title: "Numbered List",
+    description: "Create a numbered list",
+    icon: ListOrdered,
+    command: (editor) => editor.chain().focus().toggleOrderedList().run(),
+  },
+  {
+    title: "Code Block",
+    description: "Create a code block",
+    icon: Code,
+    command: (editor) => editor.chain().focus().toggleCodeBlock().run(),
+  },
+  {
+    title: "Quote",
+    description: "Create a quote",
+    icon: Quote,
+    command: (editor) => editor.chain().focus().toggleBlockquote().run(),
+  },
+];
+
+// Slash menu component
+function SlashMenu({ items, selectedIndex, onSelect }: {
+  items: SlashCommand[];
+  selectedIndex: number;
+  onSelect: (index: number) => void;
+}) {
+  return (
+    <div className="bg-popover border border-border rounded-lg shadow-lg p-1 min-w-[280px] max-h-[300px] overflow-y-auto">
+      {items.map((item, index) => {
+        const Icon = item.icon;
+        return (
+          <button
+            key={index}
+            type="button"
+            onClick={() => onSelect(index)}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+              index === selectedIndex
+                ? "bg-accent text-accent-foreground"
+                : "hover:bg-accent/50 text-foreground"
+            }`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" />
+            <div className="flex-1 text-left">
+              <div className="font-medium">{item.title}</div>
+              <div className="text-xs text-muted-foreground">{item.description}</div>
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// Slash menu extension - create a proper Tiptap Extension
+const SlashMenuExtension = Extension.create({
+  name: "slashMenu",
+
+  addProseMirrorPlugins() {
+    let container: HTMLElement | null = null;
+    let root: Root | null = null;
+    let selectedIndex = 0;
+    let currentProps: any = null;
+
+    const updateMenu = (props: any) => {
+      currentProps = props;
+      if (root && container && props) {
+        const items = props.items || [];
+        root.render(
+          <SlashMenu
+            items={items}
+            selectedIndex={selectedIndex}
+            onSelect={(index: number) => {
+              const item = items[index];
+              if (item && props.command) {
+                props.command(item);
+              }
+            }}
+          />
+        );
+
+        // Update position
+        if (props.clientRect) {
+          const rect = props.clientRect();
+          if (rect) {
+            container.style.left = `${rect.left}px`;
+            container.style.top = `${rect.bottom + 4}px`;
+          }
+        }
+      }
+    };
+
+    return [
+      Suggestion({
+        editor: this.editor,
+        char: "/",
+        allowedPrefixes: null, // Allow "/" anywhere (at start of line, after space, etc.)
+        items: ({ query }: { query: string; editor: any }) => {
+          console.log("Slash menu items called with query:", query);
+          const filtered = slashCommands.filter((cmd) =>
+            cmd.title.toLowerCase().includes(query.toLowerCase()) ||
+            cmd.description.toLowerCase().includes(query.toLowerCase())
+          );
+          const result = filtered.length > 0 ? filtered : slashCommands;
+          console.log("Slash menu items result:", result);
+          return result;
+        },
+        command: ({ editor, range, props: selectedItem }: { editor: any; range: any; props: SlashCommand }) => {
+          // Delete the "/" and query text
+          editor
+            .chain()
+            .focus()
+            .deleteRange(range)
+            .run();
+
+          // Execute the selected command
+          if (selectedItem) {
+            selectedItem.command(editor);
+          }
+        },
+        render: () => {
+          return {
+            onStart: (props: any) => {
+              console.log("Slash menu onStart", props);
+              selectedIndex = 0;
+              // Create container element
+              container = document.createElement("div");
+              container.className = "tiptap-suggestion-menu";
+              container.style.position = "fixed";
+              container.style.zIndex = "9999";
+              document.body.appendChild(container);
+
+              // Create React root
+              root = createRoot(container);
+              updateMenu(props);
+            },
+            onUpdate: (props: any) => {
+              selectedIndex = 0; // Reset selection on update
+              updateMenu(props);
+            },
+            onKeyDown: (keyDownProps: any) => {
+              if (!currentProps) return false;
+
+              if (keyDownProps.event.key === "Enter") {
+                const items = currentProps.items || [];
+                const item = items[selectedIndex];
+                if (item && currentProps.command) {
+                  currentProps.command(item);
+                  return true;
+                }
+                return false;
+              }
+              if (keyDownProps.event.key === "ArrowUp") {
+                const items = currentProps.items || [];
+                selectedIndex = selectedIndex > 0 ? selectedIndex - 1 : items.length - 1;
+                if (root && container) {
+                  updateMenu(currentProps);
+                }
+                return true;
+              }
+              if (keyDownProps.event.key === "ArrowDown") {
+                const items = currentProps.items || [];
+                selectedIndex = selectedIndex < items.length - 1 ? selectedIndex + 1 : 0;
+                if (root && container) {
+                  updateMenu(currentProps);
+                }
+                return true;
+              }
+              return false;
+            },
+            onExit: () => {
+              selectedIndex = 0;
+              if (root) {
+                root.unmount();
+                root = null;
+              }
+              if (container) {
+                container.remove();
+                container = null;
+              }
+            },
+          };
+        },
+      }),
+    ];
+  },
+});
 
 export function PageEditor({
   pageId,
@@ -37,39 +262,79 @@ export function PageEditor({
   const { page: fetchedPage, isLoading, mutate } = usePage(pageId, isDemo);
   const [saving, setSaving] = useState(false);
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
-  const [splitView, setSplitView] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  const isInitializingRef = useRef(false);
+
+  // Initialize Tiptap editor
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
+      Placeholder.configure({
+        placeholder: "Type '/' for commands...",
+      }),
+      SlashMenuExtension,
+    ],
+    content: "",
+    editorProps: {
+      attributes: {
+        class: "prose prose-invert max-w-none focus:outline-none min-h-[200px] px-1 py-2",
+      },
+    },
+    onUpdate: ({ editor }) => {
+      if (initialized && fetchedPage && !isInitializingRef.current) {
+        const html = editor.getHTML();
+        const markdown = htmlToMarkdown(html);
+        const changed = title !== fetchedPage.title || markdown !== fetchedPage.content;
+        setHasChanges(changed);
+      }
+    },
+  });
 
   // Initialize title and content when page data loads
   useEffect(() => {
-    if (fetchedPage && !initialized) {
+    if (fetchedPage && !initialized && editor && !isInitializingRef.current) {
+      isInitializingRef.current = true;
       setTitle(fetchedPage.title);
-      setContent(fetchedPage.content);
-      setInitialized(true);
-    }
-  }, [fetchedPage, initialized]);
 
-  useEffect(() => {
-    if (fetchedPage && initialized) {
-      const changed = title !== fetchedPage.title || content !== fetchedPage.content;
-      setHasChanges(changed);
+      // Convert markdown to HTML and set editor content
+      const markdown = fetchedPage.content || "";
+      if (markdown.trim()) {
+        try {
+          const html = markdownToHtml(markdown);
+          editor.commands.setContent(html);
+        } catch (err) {
+          logger.error("Failed to parse markdown:", err);
+          editor.commands.setContent(`<p>${markdown}</p>`);
+        }
+      } else {
+        editor.commands.setContent("<p></p>");
+      }
+
+      setInitialized(true);
+      isInitializingRef.current = false;
     }
-  }, [title, content, fetchedPage, initialized]);
+  }, [fetchedPage, initialized, editor]);
 
   const handleSave = useCallback(async () => {
-    if (!hasChanges || !fetchedPage) return;
-
-    if (isDemo) {
-      mutate({ ...fetchedPage, title, content }, false);
-      setHasChanges(false);
-      return;
-    }
+    if (!hasChanges || !fetchedPage || !editor) return;
 
     try {
+      const html = editor.getHTML();
+      const markdown = htmlToMarkdown(html);
+
+      if (isDemo) {
+        mutate({ ...fetchedPage, title, content: markdown }, false);
+        setHasChanges(false);
+        return;
+      }
+
       setSaving(true);
-      const updated = await api.updatePage(pageId, { title, content });
+      const updated = await api.updatePage(pageId, { title, content: markdown });
       mutate(updated, false);
       setHasChanges(false);
       toast.success("Page saved");
@@ -79,7 +344,7 @@ export function PageEditor({
     } finally {
       setSaving(false);
     }
-  }, [pageId, title, content, hasChanges, isDemo, fetchedPage, mutate]);
+  }, [pageId, title, hasChanges, isDemo, fetchedPage, mutate, editor]);
 
   // Auto-save on Cmd/Ctrl + S
   useEffect(() => {
@@ -108,6 +373,20 @@ export function PageEditor({
       toast.error("Failed to delete page");
     }
   }
+
+  // Track title changes
+  useEffect(() => {
+    if (fetchedPage && initialized && editor) {
+      try {
+        const html = editor.getHTML();
+        const markdown = htmlToMarkdown(html);
+        const changed = title !== fetchedPage.title || markdown !== fetchedPage.content;
+        setHasChanges(changed);
+      } catch (err) {
+        // Ignore errors during change tracking
+      }
+    }
+  }, [title, fetchedPage, initialized, editor]);
 
   if (isLoading) {
     return (
@@ -166,24 +445,6 @@ export function PageEditor({
             {hasChanges && (
               <span className="text-xs text-muted-foreground mr-2">Unsaved</span>
             )}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setSplitView(!splitView)}
-                >
-                  {splitView ? (
-                    <Maximize2 className="w-4 h-4" />
-                  ) : (
-                    <Columns2 className="w-4 h-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                {splitView ? "Focus mode" : "Split view"}
-              </TooltipContent>
-            </Tooltip>
             <Button
               variant="ghost"
               size="sm"
@@ -204,264 +465,23 @@ export function PageEditor({
           </div>
         </div>
 
-        {/* Editor Area */}
-        <div className={cn("flex-1 flex overflow-hidden", splitView ? "gap-0" : "")}>
-          {/* Markdown Editor */}
-          <div className={cn("flex flex-col", splitView ? "w-1/2 border-r border-border" : "flex-1")}>
-            <div className="px-4 py-2 border-b border-border bg-muted/30">
-              <span className="text-xs text-muted-foreground font-medium">MARKDOWN</span>
-            </div>
-            <Textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="flex-1 resize-none font-mono text-sm bg-transparent border-none rounded-none focus-visible:ring-0 p-4"
-              placeholder="Write your content in markdown..."
-            />
-          </div>
-
-          {/* Live Preview */}
-          {splitView && (
-            <div className="w-1/2 flex flex-col">
-              <div className="px-4 py-2 border-b border-border bg-muted/30">
-                <span className="text-xs text-muted-foreground font-medium">PREVIEW</span>
-              </div>
-              <ScrollArea className="flex-1">
-                <div className="p-4 prose max-w-none">
-                  <DebouncedMarkdownPreview content={content} />
+        {/* Tiptap Editor */}
+        {editor ? (
+          <div className="flex-1 overflow-hidden bg-background">
+            <ScrollArea className="h-full">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
+                <div className="prose prose-invert max-w-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[200px] [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-semibold [&_.ProseMirror_h1]:mt-8 [&_.ProseMirror_h1]:mb-4 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h2]:mt-6 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-medium [&_.ProseMirror_h3]:mt-4 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_p]:my-3 [&_.ProseMirror_p]:leading-relaxed [&_.ProseMirror_strong]:font-semibold [&_.ProseMirror_em]:italic [&_.ProseMirror_code]:bg-muted [&_.ProseMirror_code]:px-1.5 [&_.ProseMirror_code]:py-0.5 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:text-sm [&_.ProseMirror_code]:font-mono [&_.ProseMirror_pre]:bg-muted [&_.ProseMirror_pre]:p-4 [&_.ProseMirror_pre]:rounded-lg [&_.ProseMirror_pre]:overflow-x-auto [&_.ProseMirror_pre]:my-4 [&_.ProseMirror_pre_code]:bg-transparent [&_.ProseMirror_pre_code]:p-0 [&_.ProseMirror_blockquote]:border-l-2 [&_.ProseMirror_blockquote]:border-primary [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:italic [&_.ProseMirror_blockquote]:text-muted-foreground [&_.ProseMirror_blockquote]:my-2 [&_.ProseMirror_ul]:my-4 [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ol]:my-4 [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_li]:my-1 [&_.ProseMirror_.is-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_.is-empty:first-child::before]:text-muted-foreground [&_.ProseMirror_.is-empty:first-child::before]:float-left [&_.ProseMirror_.is-empty:first-child::before]:pointer-events-none [&_.ProseMirror_.is-empty:first-child::before]:h-0">
+                  <EditorContent editor={editor} />
                 </div>
-              </ScrollArea>
-            </div>
-          )}
-        </div>
+              </div>
+            </ScrollArea>
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
       </div>
     </TooltipProvider>
   );
-}
-
-// Debounced markdown preview component
-function DebouncedMarkdownPreview({ content }: { content: string }) {
-  const [debouncedContent, setDebouncedContent] = useState(content);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedContent(content);
-    }, 300); // 300ms debounce delay
-
-    return () => clearTimeout(timer);
-  }, [content]);
-
-  return <MarkdownPreview content={debouncedContent} />;
-}
-
-// Markdown preview with memoized rendering
-const MarkdownPreview = memo(function MarkdownPreview({ content }: { content: string }) {
-  const parsedContent = useMemo(() => {
-    if (!content.trim()) {
-      return <p className="text-muted-foreground italic">Start typing to see preview...</p>;
-    }
-
-    const lines = content.split("\n");
-    const elements: React.ReactNode[] = [];
-    let inCodeBlock = false;
-    let codeContent = "";
-    let codeLanguage = "";
-    let listItems: React.ReactNode[] = [];
-    let listType: "ul" | "ol" | null = null;
-
-    function flushList() {
-      if (listItems.length > 0) {
-        if (listType === "ul") {
-          elements.push(<ul key={`list-${elements.length}`} className="my-4 pl-6 list-disc">{listItems}</ul>);
-        } else {
-          elements.push(<ol key={`list-${elements.length}`} className="my-4 pl-6 list-decimal">{listItems}</ol>);
-        }
-        listItems = [];
-        listType = null;
-      }
-    }
-
-    lines.forEach((line, i) => {
-    // Code block handling
-    if (line.startsWith("```")) {
-      if (inCodeBlock) {
-        elements.push(
-          <pre key={i} className="bg-muted p-4 rounded-lg overflow-x-auto my-4 font-mono text-sm">
-            <code>{codeContent.trim()}</code>
-          </pre>
-        );
-        codeContent = "";
-        codeLanguage = "";
-      } else {
-        flushList();
-        codeLanguage = line.slice(3);
-      }
-      inCodeBlock = !inCodeBlock;
-      return;
-    }
-
-    if (inCodeBlock) {
-      codeContent += line + "\n";
-      return;
-    }
-
-    // Headers
-    if (line.startsWith("# ")) {
-      flushList();
-      elements.push(<h1 key={i} className="text-2xl font-semibold mt-8 mb-4 first:mt-0">{formatInline(line.slice(2))}</h1>);
-      return;
-    }
-    if (line.startsWith("## ")) {
-      flushList();
-      elements.push(<h2 key={i} className="text-xl font-semibold mt-6 mb-3">{formatInline(line.slice(3))}</h2>);
-      return;
-    }
-    if (line.startsWith("### ")) {
-      flushList();
-      elements.push(<h3 key={i} className="text-lg font-medium mt-4 mb-2">{formatInline(line.slice(4))}</h3>);
-      return;
-    }
-
-    // Horizontal rule
-    if (line.match(/^---+$/)) {
-      flushList();
-      elements.push(<hr key={i} className="border-border my-6" />);
-      return;
-    }
-
-    // Blockquote
-    if (line.startsWith("> ")) {
-      flushList();
-      elements.push(
-        <blockquote key={i} className="border-l-2 border-border pl-4 italic text-muted-foreground my-2">
-          {formatInline(line.slice(2))}
-        </blockquote>
-      );
-      return;
-    }
-
-    // Unordered list
-    if (line.match(/^[-*] /)) {
-      if (listType !== "ul") {
-        flushList();
-        listType = "ul";
-      }
-      listItems.push(<li key={i}>{formatInline(line.slice(2))}</li>);
-      return;
-    }
-
-    // Ordered list
-    if (line.match(/^\d+\. /)) {
-      if (listType !== "ol") {
-        flushList();
-        listType = "ol";
-      }
-      listItems.push(<li key={i}>{formatInline(line.replace(/^\d+\. /, ""))}</li>);
-      return;
-    }
-
-    // Empty line
-    if (line.trim() === "") {
-      flushList();
-      return;
-    }
-
-      // Paragraph
-      flushList();
-      elements.push(<p key={i} className="my-3 leading-relaxed">{formatInline(line)}</p>);
-    });
-
-    flushList();
-
-    return <>{elements}</>;
-  }, [content]);
-
-  return parsedContent;
-});
-
-  return parsedContent;
-});
-
-function formatInline(text: string): React.ReactNode {
-  // Process inline formatting
-  const parts: React.ReactNode[] = [];
-  let remaining = text;
-  let key = 0;
-
-  while (remaining.length > 0) {
-    // Bold + Italic
-    let match = remaining.match(/^\*\*\*(.+?)\*\*\*/);
-    if (match) {
-      parts.push(<strong key={key++}><em>{match[1]}</em></strong>);
-      remaining = remaining.slice(match[0].length);
-      continue;
-    }
-
-    // Bold
-    match = remaining.match(/^\*\*(.+?)\*\*/);
-    if (match) {
-      parts.push(<strong key={key++}>{match[1]}</strong>);
-      remaining = remaining.slice(match[0].length);
-      continue;
-    }
-
-    // Italic
-    match = remaining.match(/^\*(.+?)\*/);
-    if (match) {
-      parts.push(<em key={key++}>{match[1]}</em>);
-      remaining = remaining.slice(match[0].length);
-      continue;
-    }
-
-    // Inline code
-    match = remaining.match(/^`([^`]+)`/);
-    if (match) {
-      parts.push(
-        <code key={key++} className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono">
-          {match[1]}
-        </code>
-      );
-      remaining = remaining.slice(match[0].length);
-      continue;
-    }
-
-    // Checkbox unchecked
-    match = remaining.match(/^\[ \]/);
-    if (match) {
-      parts.push(
-        <span key={key++} className="inline-block w-4 h-4 border border-muted-foreground rounded mr-1.5 align-middle" />
-      );
-      remaining = remaining.slice(match[0].length);
-      continue;
-    }
-
-    // Checkbox checked
-    match = remaining.match(/^\[x\]/i);
-    if (match) {
-      parts.push(
-        <span key={key++} className="inline-flex items-center justify-center w-4 h-4 bg-primary rounded mr-1.5 align-middle text-xs text-primary-foreground">
-          ✓
-        </span>
-      );
-      remaining = remaining.slice(match[0].length);
-      continue;
-    }
-
-    // Link
-    match = remaining.match(/^\[([^\]]+)\]\(([^)]+)\)/);
-    if (match) {
-      parts.push(
-        <a key={key++} href={match[2]} className="text-primary underline underline-offset-2">
-          {match[1]}
-        </a>
-      );
-      remaining = remaining.slice(match[0].length);
-      continue;
-    }
-
-    // Regular text (take one character at a time if no pattern matches)
-    parts.push(remaining[0]);
-    remaining = remaining.slice(1);
-  }
-
-  return <>{parts}</>;
 }
