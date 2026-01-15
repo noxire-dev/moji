@@ -46,11 +46,15 @@
   html {
     @apply antialiased;
     color-scheme: dark;
+    height: 100%;
+    scrollbar-gutter: stable;
   }
 
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    min-height: 100%;
+    overflow-y: scroll;
   }
 
   /* Smooth interactions for interactive elements */

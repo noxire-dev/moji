@@ -44,7 +44,7 @@ function WorkspaceDetail() {
   // Only show full page spinner for initial auth loading
   if (authLoading) {
     return (
-      <div className="h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-background">
         <AppHeader isDemo={isDemo} onSignOut={signOut} />
         <div className="flex-1 flex overflow-hidden">
           <div className="hidden md:block w-60 border-r border-border/40 bg-card/40">
@@ -73,7 +73,7 @@ function WorkspaceDetail() {
   // Show skeleton/loading state while workspace is loading, but use navbar loader
   if (!workspace) {
     return (
-      <div className="h-screen flex flex-col bg-background">
+      <div className="min-h-screen flex flex-col bg-background">
         <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
         <div className="flex-1 flex overflow-hidden">
           <div className="hidden md:block w-60 border-r border-border/40 bg-card/40">
@@ -96,7 +96,7 @@ function WorkspaceDetail() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
       <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
 
       <div className="flex-1 flex overflow-hidden">

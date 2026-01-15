@@ -10,9 +10,6 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
   },
 
-  // Enable SWC minification (default in Next.js 14, but explicit)
-  swcMinify: true,
-
   // Optimize images (for future use)
   images: {
     formats: ['image/avif', 'image/webp'],
