@@ -1,10 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
-import { supabase, AuthUser } from "@/lib/supabase";
+import { AuthUser, supabase } from "@/lib/supabase";
+import { applyTheme, applyTexturePreference, defaultTheme, getThemeById, Theme, THEME_STORAGE_KEY, TEXTURE_STORAGE_KEY, themes } from "@/lib/themes";
 import { Session } from "@supabase/supabase-js";
-import { Theme, themes, defaultTheme, getThemeById, applyTheme, THEME_STORAGE_KEY } from "@/lib/themes";
 import { usePathname } from "next/navigation";
+import { createContext, useContext, useEffect, useState } from "react";
 
 // ============================================================================
 // Auth Context
@@ -34,12 +34,16 @@ interface ThemeContextType {
   theme: Theme;
   themes: Theme[];
   setTheme: (themeId: string) => void;
+  textureEnabled: boolean;
+  setTexture: (enabled: boolean) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
   theme: defaultTheme,
   themes: themes,
   setTheme: () => {},
+  textureEnabled: false,
+  setTexture: () => {},
 });
 
 // ============================================================================
@@ -59,7 +63,7 @@ const NavigationLoadingContext = createContext<NavigationLoadingContextType>({
 // Demo user for UI preview
 const DEMO_USER: AuthUser = {
   id: "demo-user-id",
-  email: "demo@moji.app",
+  email: "demo@usemoji.app",
   user_metadata: { username: "demo" },
 };
 
@@ -133,22 +137,28 @@ export function useAccessToken(): string | null {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [currentTheme, setCurrentTheme] = useState<Theme>(defaultTheme);
   const [mounted, setMounted] = useState(false);
+  const [textureEnabled, setTextureEnabled] = useState(false);
 
   // Load theme from localStorage on mount (client-side only)
   useEffect(() => {
     setMounted(true);
     const savedThemeId = localStorage.getItem(THEME_STORAGE_KEY);
+    const savedTexture = localStorage.getItem(TEXTURE_STORAGE_KEY);
+    const texturePref = savedTexture === "true";
+    setTextureEnabled(texturePref);
     if (savedThemeId) {
       const theme = getThemeById(savedThemeId);
       setCurrentTheme(theme);
       // Apply theme after a small delay to ensure DOM is ready
       setTimeout(() => {
         applyTheme(theme);
+        applyTexturePreference(texturePref);
       }, 0);
     } else {
       // Apply default theme on mount
       setTimeout(() => {
         applyTheme(defaultTheme);
+        applyTexturePreference(texturePref);
       }, 0);
     }
   }, []);
@@ -160,14 +170,25 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [currentTheme, mounted]);
 
+  useEffect(() => {
+    if (mounted) {
+      applyTexturePreference(textureEnabled);
+    }
+  }, [textureEnabled, mounted]);
+
   const setTheme = (themeId: string) => {
     const theme = getThemeById(themeId);
     setCurrentTheme(theme);
     localStorage.setItem(THEME_STORAGE_KEY, themeId);
   };
 
+  const setTexture = (enabled: boolean) => {
+    setTextureEnabled(enabled);
+    localStorage.setItem(TEXTURE_STORAGE_KEY, String(enabled));
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme: currentTheme, themes, setTheme }}>
+    <ThemeContext.Provider value={{ theme: currentTheme, themes, setTheme, textureEnabled, setTexture }}>
       {children}
     </ThemeContext.Provider>
   );

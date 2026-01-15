@@ -1,25 +1,32 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, User, Mail, Calendar, Check, Loader2 } from "lucide-react";
-import Link from "next/link";
-import { useAuth } from "@/app/providers";
+import { useAccessToken, useAuth } from "@/app/providers";
 import { AppHeader } from "@/components/AppHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import * as api from "@/lib/api";
 import { supabase } from "@/lib/supabase";
+import { ArrowLeft, Calendar, Check, Loader2, Mail, User } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 function ProfileContent() {
   const { user, loading, signOut, isDemo } = useAuth();
+  const token = useAccessToken();
   const router = useRouter();
 
   const [username, setUsername] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -41,6 +48,7 @@ function ProfileContent() {
 
     if (isDemo) {
       setSaved(true);
+      toast.message("Saved in demo mode");
       setTimeout(() => setSaved(false), 2000);
       return;
     }
@@ -55,22 +63,58 @@ function ProfileContent() {
 
       if (updateError) {
         setError(updateError.message);
+        toast.error(updateError.message);
         return;
       }
 
       setSaved(true);
+      toast.success("Profile updated");
       setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       setError("Failed to update profile");
+      toast.error("Failed to update profile");
     } finally {
       setSaving(false);
     }
   }
 
+  async function handleDeleteAccount() {
+    if (isDemo) {
+      toast.message("Account deletion is disabled in demo mode");
+      setDeleteOpen(false);
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      await api.deleteAccount(token);
+      toast.success("Account deleted");
+      await signOut();
+    } catch (err) {
+      toast.error("Failed to delete account");
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
+    }
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-background">
+        <AppHeader isDemo={isDemo} onSignOut={signOut} />
+        <main className="max-w-2xl mx-auto px-6 py-8">
+          <div className="mb-6">
+            <Skeleton className="h-8 w-48" />
+          </div>
+          <div className="mb-8 space-y-2">
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-56 w-full rounded-lg" />
+            <Skeleton className="h-40 w-full rounded-lg" />
+          </div>
+        </main>
       </div>
     );
   }
@@ -201,7 +245,7 @@ function ProfileContent() {
                     Permanently delete your account and all data
                   </p>
                 </div>
-                <Button variant="destructive" size="sm" disabled>
+                <Button variant="destructive" size="sm" onClick={() => setDeleteOpen(true)}>
                   Delete Account
                 </Button>
               </div>
@@ -209,6 +253,26 @@ function ProfileContent() {
           </Card>
         </div>
       </main>
+
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete your account?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete your account and all workspaces, tasks,
+              notes, and pages. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAccount} disabled={deleting}>
+              {deleting ? "Deleting..." : "Delete account"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -216,11 +280,3 @@ function ProfileContent() {
 export default function ProfilePage() {
   return <ProfileContent />;
 }
-
-
-
-
-
-
-
-

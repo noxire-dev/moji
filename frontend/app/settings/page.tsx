@@ -6,6 +6,7 @@ import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, Info, Palette } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -23,8 +24,21 @@ function SettingsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-background">
+        <AppHeader isDemo={isDemo} onSignOut={signOut} />
+        <main className="max-w-2xl mx-auto px-6 py-8">
+          <div className="mb-6">
+            <Skeleton className="h-8 w-48" />
+          </div>
+          <div className="mb-8 space-y-2">
+            <Skeleton className="h-7 w-32" />
+            <Skeleton className="h-4 w-56" />
+          </div>
+          <div className="space-y-6">
+            <Skeleton className="h-48 w-full rounded-lg" />
+            <Skeleton className="h-40 w-full rounded-lg" />
+          </div>
+        </main>
       </div>
     );
   }
@@ -94,17 +108,21 @@ function SettingsContent() {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Version</span>
-                  <span className="font-medium">1.0.0</span>
+                  <span className="font-medium">0.1.0</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Build</span>
-                  <span className="font-medium font-mono text-xs">2025.12.30</span>
+                  <span className="font-medium font-mono text-xs">2026.01.15</span>
                 </div>
                 <Separator className="my-3" />
                 <p className="text-muted-foreground leading-relaxed">
-                  Moji is a workspace-centric productivity app designed to help you stay focused
-                  and build momentum. Less bloated, more focused.
+                  Moji is a minimal, workspace-centric system for focused work.
+                  Keep tasks actionable, notes short, and pages evolving.
                 </p>
+                <div className="space-y-1 text-xs text-muted-foreground">
+                  <p>usemoji.app</p>
+                  <p>Built by Mirako — mirako.computer</p>
+                </div>
               </div>
             </CardContent>
           </Card>

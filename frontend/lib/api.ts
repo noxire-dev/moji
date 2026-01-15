@@ -277,3 +277,13 @@ export async function deletePage(pageId: string, token?: string | null): Promise
     method: "DELETE",
   }, token);
 }
+
+// ============================================
+// Account API
+// ============================================
+
+export async function deleteAccount(token?: string | null): Promise<void> {
+  return apiFetch<void>("/account", {
+    method: "DELETE",
+  }, token);
+}

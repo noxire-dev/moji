@@ -29,9 +29,9 @@ interface WorkspaceSwitcherProps {
 }
 
 const DEMO_WORKSPACES: api.Workspace[] = [
-  { id: "demo-1", name: "Personal", description: "Personal tasks and notes", user_id: "demo", created_at: "", updated_at: "" },
-  { id: "demo-2", name: "Moji Development", description: "Building the best productivity app", user_id: "demo", created_at: "", updated_at: "" },
-  { id: "demo-3", name: "2026 Goals", description: "New year resolutions", user_id: "demo", created_at: "", updated_at: "" },
+  { id: "demo-welcome", name: "Welcome to Moji", description: "Start here to learn the Moji flow", user_id: "demo", created_at: "", updated_at: "" },
+  { id: "demo-personal", name: "Personal", description: "Personal tasks, notes, and pages", user_id: "demo", created_at: "", updated_at: "" },
+  { id: "demo-work", name: "Work", description: "Work projects and collaboration", user_id: "demo", created_at: "", updated_at: "" },
 ];
 
 export function WorkspaceSwitcher({
@@ -79,7 +79,7 @@ export function WorkspaceSwitcher({
           variant="ghost"
           role="combobox"
           aria-expanded={open}
-          className="w-full justify-between gap-2 px-2"
+          className="w-full justify-between gap-2 px-2.5 h-9 rounded-md hover:bg-accent/70"
         >
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -92,7 +92,7 @@ export function WorkspaceSwitcher({
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0" align="start">
         <Command>
-          <CommandInput placeholder="Search workspaces..." />
+          <CommandInput placeholder="Search workspaces..." className="h-9" />
           <CommandList>
             <CommandEmpty>No workspaces found.</CommandEmpty>
             <CommandGroup heading="Workspaces">
@@ -101,7 +101,7 @@ export function WorkspaceSwitcher({
                   key={workspace.id}
                   value={workspace.name}
                   onSelect={() => handleSelect(workspace.id)}
-                  className="gap-2"
+                  className="gap-2 transition-colors"
                 >
                   <FolderOpen className="h-4 w-4 text-muted-foreground" />
                   <span className="flex-1 truncate">{workspace.name}</span>

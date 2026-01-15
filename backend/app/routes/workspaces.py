@@ -6,6 +6,7 @@ from app.dependencies import get_current_user, get_authenticated_client
 from app.models.workspace import Workspace, WorkspaceCreate, WorkspaceUpdate
 from app.exceptions import handle_exception
 from app.config import get_settings
+from app.utils import seed_default_workspaces
 from supabase import Client
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
@@ -25,7 +26,19 @@ async def get_workspaces(
             .order("created_at", desc=False)
             .execute()
         )
-        return response.data
+        workspaces = response.data or []
+        should_seed = (
+            len(workspaces) == 0
+            or (
+                len(workspaces) == 1
+                and workspaces[0].get("name") == "Personal"
+                and workspaces[0].get("description") == "Your personal workspace"
+            )
+        )
+        if should_seed:
+            return seed_default_workspaces(str(user.id), supabase, workspaces)
+
+        return workspaces
     except HTTPException:
         raise
     except Exception as e:

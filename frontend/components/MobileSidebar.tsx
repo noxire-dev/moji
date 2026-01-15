@@ -86,7 +86,7 @@ export function MobileSidebar({
       <Button
         variant="ghost"
         size="icon"
-        className="md:hidden"
+        className="md:hidden h-9 w-9"
         onClick={() => setIsOpen(true)}
       >
         <Menu className="w-5 h-5" />
@@ -103,12 +103,12 @@ export function MobileSidebar({
       {/* Slide-out Menu */}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-72 bg-card border-r border-border transform transition-transform duration-300 ease-in-out md:hidden",
+          "fixed inset-y-0 left-0 z-50 w-72 bg-card/95 backdrop-blur-sm border-r border-border/60 transform transition-transform duration-300 ease-in-out md:hidden",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-4 border-b border-border/60">
           <span className="font-semibold">Menu</span>
           <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
             <X className="w-5 h-5" />
@@ -116,7 +116,7 @@ export function MobileSidebar({
         </div>
 
         {/* Workspace Switcher */}
-        <div className="p-2 border-b border-border">
+        <div className="p-2 border-b border-border/60">
           <WorkspaceSwitcher
             currentWorkspaceId={workspaceId}
             currentWorkspaceName={workspaceName}
@@ -126,7 +126,7 @@ export function MobileSidebar({
 
         <ScrollArea className="flex-1 px-2 py-3">
           {/* Main Navigation */}
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {navItems.map((item) => {
               const isActive = !isOnPage && activeTab === item.id;
               return (
@@ -137,10 +137,10 @@ export function MobileSidebar({
                     setIsOpen(false);
                   }}
                   className={cn(
-                    "w-full flex items-center gap-2.5 px-2.5 py-3 rounded-lg text-sm font-medium transition-all",
+                    "w-full flex items-center gap-2.5 px-3 py-3 rounded-md text-sm font-medium transition-colors",
                     isActive
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                   )}
                 >
                   <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
@@ -155,13 +155,13 @@ export function MobileSidebar({
           {/* Pages Section */}
           <div className="space-y-1">
             <div className="flex items-center justify-between px-2 py-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                 Pages
               </span>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 px-2"
+                className="h-6 px-2 text-muted-foreground hover:text-foreground"
                 onClick={handleNewPage}
               >
                 <Plus className="h-3 w-3 mr-1" />
@@ -188,8 +188,8 @@ export function MobileSidebar({
                     className={cn(
                       "flex items-center gap-2 px-2 py-2.5 rounded-md text-sm transition-colors",
                       pathname.includes(`/pages/${page.id}`)
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        ? "bg-accent/80 text-foreground"
+                        : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                     )}
                   >
                     <File className="w-4 h-4" />

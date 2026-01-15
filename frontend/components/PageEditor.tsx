@@ -34,7 +34,7 @@ interface PageEditorProps {
 // Slash menu command interface
 interface SlashCommand {
   title: string;
-  description: string;
+  description?: string;
   icon: React.ComponentType<{ className?: string }>;
   command: (editor: any) => void;
 }
@@ -92,7 +92,7 @@ function SlashMenu({ items, selectedIndex, onSelect }: {
   onSelect: (index: number) => void;
 }) {
   return (
-    <div className="bg-popover border border-border rounded-lg shadow-lg p-1 min-w-[280px] max-h-[300px] overflow-y-auto">
+    <div className="bg-popover/95 backdrop-blur-sm border border-border/60 rounded-xl shadow-xl py-1.5 px-1.5 min-w-[240px] max-h-[320px] overflow-y-auto">
       {items.map((item, index) => {
         const Icon = item.icon;
         return (
@@ -100,16 +100,17 @@ function SlashMenu({ items, selectedIndex, onSelect }: {
             key={index}
             type="button"
             onClick={() => onSelect(index)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
               index === selectedIndex
-                ? "bg-accent text-accent-foreground"
-                : "hover:bg-accent/50 text-foreground"
+                ? "bg-accent/90 text-accent-foreground"
+                : "hover:bg-accent/60 text-foreground"
             }`}
           >
-            <Icon className="w-4 h-4 flex-shrink-0" />
-            <div className="flex-1 text-left">
-              <div className="font-medium">{item.title}</div>
-              <div className="text-xs text-muted-foreground">{item.description}</div>
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-background/70 border border-border/70">
+              <Icon className="w-4 h-4 flex-shrink-0" />
+            </span>
+            <div className="flex-1 text-left font-medium">
+              {item.title}
             </div>
           </button>
         );
@@ -162,13 +163,11 @@ const SlashMenuExtension = Extension.create({
         char: "/",
         allowedPrefixes: null, // Allow "/" anywhere (at start of line, after space, etc.)
         items: ({ query }: { query: string; editor: any }) => {
-          console.log("Slash menu items called with query:", query);
           const filtered = slashCommands.filter((cmd) =>
             cmd.title.toLowerCase().includes(query.toLowerCase()) ||
-            cmd.description.toLowerCase().includes(query.toLowerCase())
+            cmd.description?.toLowerCase().includes(query.toLowerCase())
           );
           const result = filtered.length > 0 ? filtered : slashCommands;
-          console.log("Slash menu items result:", result);
           return result;
         },
         command: ({ editor, range, props: selectedItem }: { editor: any; range: any; props: SlashCommand }) => {
@@ -187,7 +186,6 @@ const SlashMenuExtension = Extension.create({
         render: () => {
           return {
             onStart: (props: any) => {
-              console.log("Slash menu onStart", props);
               selectedIndex = 0;
               // Create container element
               container = document.createElement("div");
@@ -429,7 +427,7 @@ export function PageEditor({
     <TooltipProvider>
       <div className="h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-card/50">
+        <div className="flex items-center justify-between px-4 py-1.5 border-b border-border/40 bg-card/40">
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <Button variant="ghost" size="icon" onClick={onBack}>
               <ArrowLeft className="w-4 h-4" />
@@ -437,7 +435,7 @@ export function PageEditor({
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-lg font-medium bg-transparent border-none focus-visible:ring-0 max-w-md"
+              className="text-base md:text-lg font-medium bg-transparent border-none focus-visible:ring-0 max-w-md"
               placeholder="Page title..."
             />
           </div>
@@ -469,8 +467,8 @@ export function PageEditor({
         {editor ? (
           <div className="flex-1 overflow-hidden bg-background">
             <ScrollArea className="h-full">
-              <div className="max-w-4xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-6">
-                <div className="prose prose-invert max-w-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[200px] [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-semibold [&_.ProseMirror_h1]:mt-8 [&_.ProseMirror_h1]:mb-4 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h2]:mt-6 [&_.ProseMirror_h2]:mb-3 [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-medium [&_.ProseMirror_h3]:mt-4 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_p]:my-3 [&_.ProseMirror_p]:leading-relaxed [&_.ProseMirror_strong]:font-semibold [&_.ProseMirror_em]:italic [&_.ProseMirror_code]:bg-muted [&_.ProseMirror_code]:px-1.5 [&_.ProseMirror_code]:py-0.5 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:text-sm [&_.ProseMirror_code]:font-mono [&_.ProseMirror_pre]:bg-muted [&_.ProseMirror_pre]:p-4 [&_.ProseMirror_pre]:rounded-lg [&_.ProseMirror_pre]:overflow-x-auto [&_.ProseMirror_pre]:my-4 [&_.ProseMirror_pre_code]:bg-transparent [&_.ProseMirror_pre_code]:p-0 [&_.ProseMirror_blockquote]:border-l-2 [&_.ProseMirror_blockquote]:border-primary [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:italic [&_.ProseMirror_blockquote]:text-muted-foreground [&_.ProseMirror_blockquote]:my-2 [&_.ProseMirror_ul]:my-4 [&_.ProseMirror_ul]:pl-6 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ol]:my-4 [&_.ProseMirror_ol]:pl-6 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_li]:my-1 [&_.ProseMirror_.is-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_.is-empty:first-child::before]:text-muted-foreground [&_.ProseMirror_.is-empty:first-child::before]:float-left [&_.ProseMirror_.is-empty:first-child::before]:pointer-events-none [&_.ProseMirror_.is-empty:first-child::before]:h-0">
+              <div className="max-w-3xl mx-auto px-4 sm:px-6 md:px-8 py-4 sm:py-5">
+                <div className="prose prose-invert max-w-none [&_.ProseMirror]:outline-none [&_.ProseMirror]:min-h-[200px] [&_.ProseMirror_h1]:text-2xl [&_.ProseMirror_h1]:font-semibold [&_.ProseMirror_h1]:mt-6 [&_.ProseMirror_h1]:mb-3 [&_.ProseMirror_h2]:text-xl [&_.ProseMirror_h2]:font-semibold [&_.ProseMirror_h2]:mt-5 [&_.ProseMirror_h2]:mb-2.5 [&_.ProseMirror_h3]:text-lg [&_.ProseMirror_h3]:font-medium [&_.ProseMirror_h3]:mt-4 [&_.ProseMirror_h3]:mb-2 [&_.ProseMirror_p]:my-3 [&_.ProseMirror_p]:leading-relaxed [&_.ProseMirror_strong]:font-semibold [&_.ProseMirror_em]:italic [&_.ProseMirror_code]:bg-muted [&_.ProseMirror_code]:px-1.5 [&_.ProseMirror_code]:py-0.5 [&_.ProseMirror_code]:rounded [&_.ProseMirror_code]:text-sm [&_.ProseMirror_code]:font-mono [&_.ProseMirror_pre]:bg-muted [&_.ProseMirror_pre]:p-4 [&_.ProseMirror_pre]:rounded-lg [&_.ProseMirror_pre]:overflow-x-auto [&_.ProseMirror_pre]:my-3 [&_.ProseMirror_pre_code]:bg-transparent [&_.ProseMirror_pre_code]:p-0 [&_.ProseMirror_blockquote]:border-l-2 [&_.ProseMirror_blockquote]:border-primary [&_.ProseMirror_blockquote]:pl-4 [&_.ProseMirror_blockquote]:italic [&_.ProseMirror_blockquote]:text-muted-foreground [&_.ProseMirror_blockquote]:my-2 [&_.ProseMirror_ul]:my-3 [&_.ProseMirror_ul]:pl-5 [&_.ProseMirror_ul]:list-disc [&_.ProseMirror_ol]:my-3 [&_.ProseMirror_ol]:pl-5 [&_.ProseMirror_ol]:list-decimal [&_.ProseMirror_li]:my-0.5 [&_.ProseMirror_.is-empty:first-child::before]:content-[attr(data-placeholder)] [&_.ProseMirror_.is-empty:first-child::before]:text-muted-foreground [&_.ProseMirror_.is-empty:first-child::before]:float-left [&_.ProseMirror_.is-empty:first-child::before]:pointer-events-none [&_.ProseMirror_.is-empty:first-child::before]:h-0">
                   <EditorContent editor={editor} />
                 </div>
               </div>

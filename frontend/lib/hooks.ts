@@ -8,25 +8,25 @@ import * as api from "./api";
 
 const DEMO_WORKSPACES: api.Workspace[] = [
   {
-    id: "demo-1",
+    id: "demo-welcome",
+    name: "Welcome to Moji",
+    description: "Start here to learn the Moji flow",
+    user_id: "demo-user",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "demo-personal",
     name: "Personal",
-    description: "Personal tasks and notes",
+    description: "Personal tasks, notes, and pages",
     user_id: "demo-user",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id: "demo-2",
-    name: "Moji Development",
-    description: "Building the best productivity app",
-    user_id: "demo-user",
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "demo-3",
-    name: "2026 Goals",
-    description: "New year resolutions and plans",
+    id: "demo-work",
+    name: "Work",
+    description: "Work projects and collaboration",
     user_id: "demo-user",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -34,22 +34,34 @@ const DEMO_WORKSPACES: api.Workspace[] = [
 ];
 
 const DEMO_TASKS: api.Task[] = [
-  { id: "t1", content: "Set up Supabase project", done: true, priority: 3, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "t2", content: "Build FastAPI backend", done: true, priority: 2, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "t3", content: "Create Next.js frontend with shadcn", done: false, priority: 3, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "t4", content: "Implement Pages feature", done: false, priority: 2, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "t5", content: "Add markdown editor", done: false, priority: 1, workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: "t1", content: "Add your first task - quick, actionable, and small", done: false, priority: 2, workspace_id: "demo-welcome", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: "t2", content: "Use priorities to surface what matters today", done: false, priority: 3, workspace_id: "demo-welcome", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: "t3", content: "Mark tasks done to keep momentum visible", done: false, priority: 1, workspace_id: "demo-welcome", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const DEMO_NOTES: api.Note[] = [
-  { id: "n1", title: "Quick idea", content: "Add keyboard shortcuts for common actions", tags: ["feature"], workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "n2", title: "Bug fix", content: "Check mobile responsiveness on sidebar", tags: ["bug"], workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: "n1", title: "Quick memory", content: "Wi-Fi code: MOJI-2026", tags: ["example", "note"], workspace_id: "demo-welcome", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: "n2", title: "Tiny reminder", content: "Sam - design review on Tuesday", tags: ["people"], workspace_id: "demo-welcome", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: "n3", title: "Useful link", content: "https://usemoji.app - keep handy links here", tags: ["link"], workspace_id: "demo-welcome", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 const DEMO_PAGES: api.Page[] = [
-  { id: "p1", title: "Project Overview", content: "# Moji Project Overview\n\nA workspace-centric productivity app.", workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "p2", title: "Architecture Notes", content: "# Architecture Notes\n\nBackend: FastAPI\nFrontend: Next.js", workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-  { id: "p3", title: "Meeting Notes", content: "# Meeting Notes\n\nDecember 30, 2025", workspace_id: "demo-1", created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  {
+    id: "p1",
+    title: "Welcome to Moji",
+    content: "# Welcome to Moji\n\nMoji is built for focus. Each workspace keeps a single context so your brain doesn't have to switch modes all day.\n\n## The flow\n- **Tasks** are small, actionable steps.\n- **Notes** are quick memory - codes, names, links.\n- **Pages** are for evolving work: plans, drafts, docs.\n",
+    workspace_id: "demo-welcome",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
+  {
+    id: "p2",
+    title: "Notes vs Pages",
+    content: "# Notes vs Pages\n\nNotes capture short, single-purpose bits of information.\nPages are where ideas grow over time.\n\nIf it changes and expands, put it in a Page. If you just need to remember it, put it in a Note.\n",
+    workspace_id: "demo-welcome",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  },
 ];
 
 // ============================================
@@ -245,7 +257,7 @@ export function usePage(pageId: string, isDemo: boolean = false) {
     id: pageId,
     title: "Untitled Page",
     content: "",
-    workspace_id: "demo-1",
+    workspace_id: "demo-welcome",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };

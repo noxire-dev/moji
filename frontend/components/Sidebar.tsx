@@ -102,9 +102,9 @@ export const Sidebar = memo(function Sidebar({
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex flex-col h-full w-60 bg-card/50 border-r border-border">
+      <div className="flex flex-col h-full w-60 bg-card/40 border-r border-border/40">
         {/* Workspace Switcher */}
-        <div className="p-2 border-b border-border">
+        <div className="p-2 border-b border-border/40">
           <WorkspaceSwitcher
             currentWorkspaceId={workspaceId}
             currentWorkspaceName={workspaceName}
@@ -114,7 +114,7 @@ export const Sidebar = memo(function Sidebar({
 
         <ScrollArea className="flex-1 px-2 py-3">
           {/* Main Navigation */}
-          <div className="space-y-0.5">
+          <div className="space-y-1">
             {navItems.map((item) => {
               const isActive = !isOnPage && activeTab === item.id;
               return (
@@ -122,10 +122,10 @@ export const Sidebar = memo(function Sidebar({
                   key={item.id}
                   onClick={() => onTabChange?.(item.id)}
                   className={cn(
-                    "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm font-medium transition-all",
+                    "w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm font-medium transition-colors",
                     isActive
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                      : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                   )}
                 >
                   <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
@@ -140,7 +140,7 @@ export const Sidebar = memo(function Sidebar({
           {/* Pages Section */}
           <div className="space-y-1">
             <div className="flex items-center justify-between px-2 py-1">
-              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
                 Pages
               </span>
               <Tooltip>
@@ -176,8 +176,8 @@ export const Sidebar = memo(function Sidebar({
                     className={cn(
                       "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
                       pathname.includes(`/pages/${page.id}`)
-                        ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:bg-accent hover:text-foreground"
+                        ? "bg-accent/80 text-foreground"
+                        : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                     )}
                   >
                     <File className="w-4 h-4" />
@@ -190,11 +190,11 @@ export const Sidebar = memo(function Sidebar({
         </ScrollArea>
 
         {/* Quick Actions */}
-        <div className="p-2 border-t border-border space-y-1">
+        <div className="p-2 border-t border-border/40 space-y-1">
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start gap-2 text-muted-foreground"
+            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
             onClick={onNewTask}
           >
             <Plus className="w-4 h-4" />
@@ -203,7 +203,7 @@ export const Sidebar = memo(function Sidebar({
           <Button
             variant="ghost"
             size="sm"
-            className="w-full justify-start gap-2 text-muted-foreground"
+            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground"
             onClick={onNewNote}
           >
             <Plus className="w-4 h-4" />

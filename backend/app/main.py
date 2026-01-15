@@ -12,10 +12,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 from app.config import get_settings, setup_logging
 from app.middleware import limiter
-from app.routes import workspaces_router, tasks_router, notes_router, pages_router
+from app.routes import workspaces_router, tasks_router, notes_router, pages_router, account_router
 import logging
 
 # Initialize settings early for middleware
@@ -24,6 +25,7 @@ settings = get_settings()
 # Setup logging
 setup_logging(debug=settings.debug)
 logger = logging.getLogger(__name__)
+abuse_logger = logging.getLogger("abuse")
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -93,6 +95,58 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
 
         return response
 
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """Reject requests with bodies larger than the configured limit."""
+
+    def __init__(self, app: FastAPI, max_bytes: int = 1_000_000):
+        super().__init__(app)
+        self.max_bytes = max_bytes
+
+    async def dispatch(self, request: Request, call_next):
+        if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+            content_length = request.headers.get("content-length")
+            if content_length:
+                try:
+                    if int(content_length) > self.max_bytes:
+                        abuse_logger.warning(
+                            "payload_too_large",
+                            extra={
+                                "path": request.url.path,
+                                "method": request.method,
+                                "client": request.client.host if request.client else "unknown",
+                                "content_length": content_length,
+                            },
+                        )
+                        return Response("Payload too large", status_code=413)
+                except ValueError:
+                    abuse_logger.warning(
+                        "invalid_content_length",
+                        extra={
+                            "path": request.url.path,
+                            "method": request.method,
+                            "client": request.client.host if request.client else "unknown",
+                            "content_length": content_length,
+                        },
+                    )
+                    return Response("Invalid Content-Length", status_code=400)
+            else:
+                body = await request.body()
+                if len(body) > self.max_bytes:
+                    abuse_logger.warning(
+                        "payload_too_large",
+                        extra={
+                            "path": request.url.path,
+                            "method": request.method,
+                            "client": request.client.host if request.client else "unknown",
+                            "content_length": len(body),
+                        },
+                    )
+                    return Response("Payload too large", status_code=413)
+                request._body = body
+
+        return await call_next(request)
+
 # App metadata
 app = FastAPI(
     title="Moji API",
@@ -106,13 +160,29 @@ logger.info("Starting Moji API")
 
 # Rate limiting
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    abuse_logger.warning(
+        "rate_limit_exceeded",
+        extra={
+            "path": request.url.path,
+            "method": request.method,
+            "client": request.client.host if request.client else "unknown",
+        },
+    )
+    return await _rate_limit_exceeded_handler(request, exc)
+
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+app.add_middleware(SlowAPIMiddleware)
 
 # Security headers middleware (should be first)
 app.add_middleware(SecurityHeadersMiddleware)
 
 # Cache control middleware (should be early in the stack)
 app.add_middleware(CacheControlMiddleware)
+
+# Request size limit middleware
+app.add_middleware(RequestSizeLimitMiddleware, max_bytes=1_000_000)
 
 # Compression middleware (should be added before CORS)
 app.add_middleware(
@@ -143,6 +213,7 @@ app.include_router(workspaces_router, prefix=API_PREFIX)
 app.include_router(tasks_router, prefix=API_PREFIX)
 app.include_router(notes_router, prefix=API_PREFIX)
 app.include_router(pages_router, prefix=API_PREFIX)
+app.include_router(account_router, prefix=API_PREFIX)
 
 
 @app.get("/")

@@ -88,8 +88,54 @@ export const japanesePastelTheme: Theme = {
   },
 };
 
+// Kanagawa theme - deep indigo with warm highlights
+export const kanagawaTheme: Theme = {
+  id: "kanagawa",
+  name: "Kanagawa",
+  description: "Deep indigo with warm sand accents",
+  colors: {
+    primary: "#C8B089",
+    accent: "#7AA89F",
+    background: "#0F0F13",
+  },
+  variables: {
+    "--background": "240 12% 6%",
+    "--foreground": "40 20% 92%",
+    "--card": "240 12% 8%",
+    "--card-foreground": "40 20% 92%",
+    "--popover": "240 12% 9%",
+    "--popover-foreground": "40 20% 92%",
+
+    "--primary": "38 30% 66%",
+    "--primary-foreground": "240 12% 10%",
+
+    "--secondary": "240 10% 12%",
+    "--secondary-foreground": "40 20% 92%",
+    "--muted": "240 10% 14%",
+    "--muted-foreground": "35 10% 55%",
+
+    "--accent": "170 20% 46%",
+    "--accent-foreground": "40 20% 92%",
+
+    "--destructive": "0 55% 56%",
+    "--destructive-foreground": "0 0% 100%",
+
+    "--border": "240 10% 16%",
+    "--input": "240 10% 14%",
+    "--ring": "38 30% 66%",
+
+    "--priority-none": "35 10% 50%",
+    "--priority-low": "140 20% 55%",
+    "--priority-medium": "38 45% 62%",
+    "--priority-high": "0 55% 60%",
+
+    "--gradient-start": "38 30% 66%",
+    "--gradient-end": "170 20% 46%",
+  },
+};
+
 // All available themes
-export const themes: Theme[] = [defaultTheme, japanesePastelTheme];
+export const themes: Theme[] = [defaultTheme, japanesePastelTheme, kanagawaTheme];
 
 // Get theme by ID
 export function getThemeById(id: string): Theme {
@@ -116,15 +162,25 @@ export function applyTheme(theme: Theme): void {
     root.style.setProperty(key, value);
   }
 
-  // Handle paper texture class - use requestAnimationFrame to avoid hydration issues
-  requestAnimationFrame(() => {
-    if (theme.hasPaperTexture) {
-      root.classList.add("theme-paper-texture");
-    } else {
-      root.classList.remove("theme-paper-texture");
-    }
-  });
+  // Texture toggle is handled separately via applyTexturePreference
 }
 
 // Storage key for persisting theme choice
 export const THEME_STORAGE_KEY = "moji_theme";
+
+export const TEXTURE_STORAGE_KEY = "moji_texture";
+
+export function applyTexturePreference(enabled: boolean): void {
+  if (typeof window === "undefined") return;
+  const root = document.documentElement;
+  const body = document.body || document.querySelector("body");
+  requestAnimationFrame(() => {
+    if (enabled) {
+      root.classList.add("theme-paper-texture");
+      body?.classList.add("theme-paper-texture");
+    } else {
+      root.classList.remove("theme-paper-texture");
+      body?.classList.remove("theme-paper-texture");
+    }
+  });
+}

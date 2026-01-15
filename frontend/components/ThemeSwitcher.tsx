@@ -1,11 +1,12 @@
 "use client";
 
-import { Check } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useTheme } from "@/app/providers";
+import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 export function ThemeSwitcher() {
-  const { theme: currentTheme, themes, setTheme } = useTheme();
+  const { theme: currentTheme, themes, setTheme, textureEnabled, setTexture } = useTheme();
 
   return (
     <div className="space-y-4">
@@ -71,6 +72,20 @@ export function ThemeSwitcher() {
             </button>
           );
         })}
+      </div>
+
+      <div className="flex items-center justify-between rounded-lg border border-border/60 bg-card/40 px-3 py-2">
+        <div className="min-w-0">
+          <p className="text-sm font-medium">Paper texture</p>
+          <p className="text-xs text-muted-foreground">
+            Add a subtle grain to the background
+          </p>
+        </div>
+        <Switch
+          checked={textureEnabled}
+          onCheckedChange={setTexture}
+          aria-label="Toggle paper texture"
+        />
       </div>
     </div>
   );

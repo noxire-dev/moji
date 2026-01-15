@@ -52,6 +52,15 @@
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+
+  /* Smooth interactions for interactive elements */
+  button,
+  a,
+  input,
+  textarea,
+  [role="button"] {
+    @apply transition-colors transition-shadow duration-150;
+  }
 }
 
 /* Subtle grid pattern for backgrounds */
@@ -116,8 +125,8 @@
 
 /* Focus */
 :focus-visible {
-  outline: 2px solid hsl(var(--ring));
-  outline-offset: 2px;
+  outline: 2px solid hsl(var(--ring) / 0.7);
+  outline-offset: 3px;
 }
 
 /* Animations */
@@ -221,11 +230,11 @@
 }
 
 .prose h1 {
-  @apply text-2xl font-semibold mt-8 mb-4 first:mt-0;
+  @apply text-2xl font-semibold mt-6 mb-3 first:mt-0;
 }
 
 .prose h2 {
-  @apply text-xl font-semibold mt-6 mb-3;
+  @apply text-xl font-semibold mt-5 mb-2.5;
 }
 
 .prose h3 {
@@ -233,15 +242,15 @@
 }
 
 .prose p {
-  @apply mb-4 leading-relaxed;
+  @apply mb-3 leading-relaxed;
 }
 
 .prose ul, .prose ol {
-  @apply mb-4 pl-6;
+  @apply mb-3 pl-5;
 }
 
 .prose li {
-  @apply mb-1;
+  @apply mb-0.5;
 }
 
 .prose ul li {
@@ -269,11 +278,11 @@
 }
 
 .prose blockquote {
-  @apply border-l-2 border-primary/30 pl-4 italic text-muted-foreground mb-4;
+  @apply border-l-2 border-primary/30 pl-4 italic text-muted-foreground mb-3;
 }
 
 .prose hr {
-  @apply border-border my-8;
+  @apply border-border my-6;
 }
 
 /* Glass effect */
@@ -284,13 +293,26 @@
 }
 
 /* Paper texture - subtle grain overlay for Japanese Pastel theme */
+html.theme-paper-texture,
 .theme-paper-texture .bg-paper,
-.theme-paper-texture body {
+.theme-paper-texture body,
+body.theme-paper-texture {
   position: relative;
 }
 
+.theme-paper-texture body,
+body.theme-paper-texture {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 180px 180px;
+  background-blend-mode: soft-light;
+}
+
+.theme-paper-texture::before,
+html.theme-paper-texture::before,
 .theme-paper-texture .bg-paper::before,
-.theme-paper-texture body::before {
+.theme-paper-texture body::before,
+body.theme-paper-texture::before {
   content: '';
   position: fixed;
   top: 0;
@@ -299,14 +321,17 @@
   height: 100%;
   pointer-events: none;
   z-index: 0;
-  opacity: 0.03;
+  opacity: 0.12;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
   background-repeat: repeat;
-  background-size: 200px 200px;
+  background-size: 180px 180px;
+  mix-blend-mode: soft-light;
 }
 
 /* Ensure content stays above the texture overlay */
-.theme-paper-texture body > * {
+html.theme-paper-texture > body > *,
+.theme-paper-texture body > *,
+body.theme-paper-texture > * {
   position: relative;
   z-index: 1;
 }

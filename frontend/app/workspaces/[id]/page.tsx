@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
 import { useAuth, useNavigationLoading } from "@/app/providers";
-import { Sidebar } from "@/components/Sidebar";
-import { MobileSidebar } from "@/components/MobileSidebar";
 import { AppHeader } from "@/components/AppHeader";
-import { TaskList } from "@/components/TaskList";
+import { MobileSidebar } from "@/components/MobileSidebar";
 import { NoteList } from "@/components/NoteList";
-import { useWorkspace, useTasks, useNotes, usePages, usePrefetchWorkspaceData } from "@/lib/hooks";
+import { Sidebar } from "@/components/Sidebar";
+import { TaskList } from "@/components/TaskList";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useNotes, usePages, usePrefetchWorkspaceData, useTasks, useWorkspace } from "@/lib/hooks";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 function WorkspaceDetail() {
   const { user, loading: authLoading, signOut, isDemo } = useAuth();
@@ -43,8 +44,24 @@ function WorkspaceDetail() {
   // Only show full page spinner for initial auth loading
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="h-screen flex flex-col bg-background">
+        <AppHeader isDemo={isDemo} onSignOut={signOut} />
+        <div className="flex-1 flex overflow-hidden">
+          <div className="hidden md:block w-60 border-r border-border/40 bg-card/40">
+            <div className="p-3 space-y-3">
+              <Skeleton className="h-8 w-36 rounded-lg" />
+              <Skeleton className="h-7 w-28 rounded-md" />
+              <Skeleton className="h-7 w-28 rounded-md" />
+            </div>
+          </div>
+          <main className="flex-1 overflow-auto bg-background">
+            <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-4">
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-64 w-full rounded-xl" />
+            </div>
+          </main>
+        </div>
       </div>
     );
   }
@@ -58,8 +75,21 @@ function WorkspaceDetail() {
     return (
       <div className="h-screen flex flex-col bg-background">
         <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-sm text-muted-foreground">Loading workspace...</div>
+        <div className="flex-1 flex overflow-hidden">
+          <div className="hidden md:block w-60 border-r border-border/40 bg-card/40">
+            <div className="p-3 space-y-3">
+              <Skeleton className="h-8 w-36 rounded-lg" />
+              <Skeleton className="h-7 w-28 rounded-md" />
+              <Skeleton className="h-7 w-28 rounded-md" />
+            </div>
+          </div>
+          <main className="flex-1 overflow-auto bg-background">
+            <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-4">
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-4 w-64" />
+              <Skeleton className="h-64 w-full rounded-xl" />
+            </div>
+          </main>
         </div>
       </div>
     );
