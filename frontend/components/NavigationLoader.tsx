@@ -1,42 +1,58 @@
 "use client";
 
 import { useNavigationLoading } from "@/app/providers";
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
 
-const SLOW_LOADING_MS = 10000;
+const SLOW_LOADING_MS = 5000; // Show toast after 5 seconds
 
 export function NavigationLoader() {
   const { isLoading } = useNavigationLoading();
-  const [showSlowMessage, setShowSlowMessage] = useState(false);
+  const loadingStartTimeRef = useRef<number | null>(null);
+  const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const toastIdRef = useRef<string | number | null>(null);
 
   useEffect(() => {
-    if (!isLoading) {
-      setShowSlowMessage(false);
-      return;
+    if (isLoading) {
+      console.log("[NavigationLoader] loading started");
+      // Record when loading started (only on first load, not on re-renders)
+      if (loadingStartTimeRef.current === null) {
+        loadingStartTimeRef.current = Date.now();
+        console.log("[NavigationLoader] timer scheduled for", SLOW_LOADING_MS, "ms");
+
+        // Schedule toast after 5 seconds
+        toastTimeoutRef.current = setTimeout(() => {
+          console.log("[NavigationLoader] showing slow loading toast");
+          toastIdRef.current = toast.info("Loading is taking longer than usual. The backend may be waking up...", {
+            duration: 8000,
+          });
+        }, SLOW_LOADING_MS);
+      }
+    } else {
+      console.log("[NavigationLoader] loading stopped");
+      // Loading stopped - reset everything
+      loadingStartTimeRef.current = null;
+
+      // Clear timeout
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = null;
+      }
+
+      // Dismiss toast if it's showing
+      if (toastIdRef.current !== null) {
+        toast.dismiss(toastIdRef.current);
+        toastIdRef.current = null;
+      }
     }
 
-    // Reset and start timer when loading begins
-    setShowSlowMessage(false);
-    const timeoutId = window.setTimeout(() => {
-      setShowSlowMessage(true);
-    }, SLOW_LOADING_MS);
-
-    return () => window.clearTimeout(timeoutId);
+    return () => {
+      if (toastTimeoutRef.current) {
+        clearTimeout(toastTimeoutRef.current);
+        toastTimeoutRef.current = null;
+      }
+    };
   }, [isLoading]);
 
-  if (!isLoading) return null;
-
-  return (
-    <div className="fixed top-12 left-0 right-0 z-50">
-      <div className="relative h-1">
-        <div className="h-full bg-primary/20 animate-pulse" />
-        <div className="h-full bg-primary animate-[loading_1.5s_ease-in-out_infinite] absolute top-0 left-0 w-1/3" />
-      </div>
-      {showSlowMessage && (
-        <div className="mx-auto mt-2 max-w-[calc(100%-2rem)] w-fit rounded-md border border-border/60 bg-card/90 px-3 py-1.5 text-xs text-muted-foreground shadow-sm text-center">
-          Sorry for the wait! The free tier backend can take up to 50 seconds to wake up. Refreshing the page often helps.
-        </div>
-      )}
-    </div>
-  );
+  return null;
 }

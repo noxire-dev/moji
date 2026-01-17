@@ -74,8 +74,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
+    const demoFromUrl = typeof window !== "undefined" && (() => {
+      const { pathname, search } = window.location;
+      if (pathname.startsWith("/workspaces/demo-")) {
+        return true;
+      }
+      const params = new URLSearchParams(search);
+      const demoParam = params.get("demo");
+      return demoParam === "true" || demoParam === "1";
+    })();
+
+    console.log("[AuthProvider] demoFromUrl", demoFromUrl, typeof window !== "undefined" ? window.location.pathname : "");
+
+    if (demoFromUrl) {
+      localStorage.setItem("moji_demo_mode", "true");
+      setIsDemo(true);
+      setUser(DEMO_USER);
+      setLoading(false);
+      return;
+    }
+
     // Check for demo mode
     const demoMode = localStorage.getItem("moji_demo_mode") === "true";
+    console.log("[AuthProvider] demoMode from localStorage", demoMode);
     if (demoMode) {
       setIsDemo(true);
       setUser(DEMO_USER);

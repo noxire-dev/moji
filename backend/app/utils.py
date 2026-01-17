@@ -31,6 +31,27 @@ async def verify_workspace_ownership(
     return bool(check.data)
 
 
+def is_over_limit(
+    supabase: Client,
+    table: str,
+    filter_column: str,
+    filter_value: str,
+    limit: int,
+) -> bool:
+    """
+    Return True when the row count reaches or exceeds the limit.
+    Uses a limited select to avoid loading all rows.
+    """
+    response = (
+        supabase.table(table)
+        .select("id")
+        .eq(filter_column, filter_value)
+        .limit(limit)
+        .execute()
+    )
+    return len(response.data or []) >= limit
+
+
 def seed_default_workspaces(
     user_id: str,
     supabase: Client,

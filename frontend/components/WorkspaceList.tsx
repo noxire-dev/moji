@@ -1,30 +1,30 @@
 "use client";
 
+import { useNavigationLoading } from "@/app/providers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import * as api from "@/lib/api";
 import { useWorkspaces } from "@/lib/hooks";
-import { useNavigationLoading } from "@/app/providers";
 import { logger } from "@/lib/logger";
 import { Folder, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 interface WorkspaceListProps {
@@ -36,6 +36,21 @@ export function WorkspaceList({ isDemo = false }: WorkspaceListProps) {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
+  const { setLoading } = useNavigationLoading();
+  const dataLoadingRef = useRef(false);
+
+  useEffect(() => {
+    if (isLoading) {
+      dataLoadingRef.current = true;
+      setLoading(true);
+      return;
+    }
+
+    if (dataLoadingRef.current) {
+      setLoading(false);
+      dataLoadingRef.current = false;
+    }
+  }, [isLoading, setLoading]);
 
   async function handleCreate() {
     if (!newName.trim()) return;

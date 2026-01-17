@@ -14,6 +14,10 @@ class Settings(BaseSettings):
     # App
     debug: bool = False
     allowed_origins: str = "http://localhost:3000"
+    max_workspaces_per_user: int = 20
+    max_pages_per_workspace: int = 200
+    max_notes_per_workspace: int = 500
+    max_tasks_per_workspace: int = 500
 
     @field_validator("supabase_url")
     @classmethod
@@ -55,6 +59,21 @@ class Settings(BaseSettings):
                 raise ValueError(f"Invalid origin format: {origin}. Must start with http:// or https://")
             if len(origin) > 2048:
                 raise ValueError(f"Origin too long: {origin}")
+        return v
+
+    @field_validator(
+        "max_workspaces_per_user",
+        "max_pages_per_workspace",
+        "max_notes_per_workspace",
+        "max_tasks_per_workspace",
+    )
+    @classmethod
+    def validate_limits(cls, v: int) -> int:
+        """Validate that limits are positive and reasonable."""
+        if v < 1:
+            raise ValueError("limits must be at least 1")
+        if v > 100000:
+            raise ValueError("limits must be <= 100000")
         return v
 
     @property

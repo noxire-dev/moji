@@ -8,21 +8,52 @@ import { Sidebar } from "@/components/Sidebar";
 import { TaskList } from "@/components/TaskList";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNotes, usePages, usePrefetchWorkspaceData, useTasks, useWorkspace } from "@/lib/hooks";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 function WorkspaceDetail() {
   const { user, loading: authLoading, signOut, isDemo } = useAuth();
   const { setLoading } = useNavigationLoading();
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams();
   const workspaceId = params.id as string;
+
+  const [activeTab, setActiveTab] = useState<"tasks" | "notes">("tasks");
+  const [simulatedLoading, setSimulatedLoading] = useState(false);
+
+  // Test slow loading in demo mode: add ?slow=15 to URL to simulate 15 second delay
+  useEffect(() => {
+    if (isDemo) {
+      const slowParam = searchParams.get("slow");
+      console.log("[WorkspaceDetail] slow param", slowParam);
+      if (slowParam) {
+        try {
+          const delaySeconds = parseFloat(slowParam);
+          if (delaySeconds > 0 && delaySeconds <= 60) {
+            // Set loading immediately
+            console.log("[WorkspaceDetail] simulate loading", `${delaySeconds}s`);
+            setSimulatedLoading(true);
+            setLoading(true);
+            const timer = setTimeout(() => {
+              console.log("[WorkspaceDetail] simulated loading complete");
+              setSimulatedLoading(false);
+              setLoading(false);
+            }, delaySeconds * 1000);
+            return () => clearTimeout(timer);
+          }
+        } catch (e) {
+          // Invalid parameter, ignore
+          console.log("[WorkspaceDetail] invalid slow param");
+        }
+      }
+    }
+  }, [isDemo, searchParams, setLoading]);
 
   const { workspace, isLoading: workspaceLoading } = useWorkspace(workspaceId, isDemo);
   const { tasks, isLoading: tasksLoading } = useTasks(workspaceId, isDemo);
   const { notes, isLoading: notesLoading } = useNotes(workspaceId, isDemo);
   const { pages, isLoading: pagesLoading } = usePages(workspaceId, isDemo);
-  const [activeTab, setActiveTab] = useState<"tasks" | "notes">("tasks");
 
   // Prefetch notes and pages in background (non-blocking)
   usePrefetchWorkspaceData(workspaceId, isDemo);
@@ -30,10 +61,21 @@ function WorkspaceDetail() {
   // Progressive loading: show content as soon as workspace and tasks are loaded
   const isLoading = workspaceLoading || (activeTab === "tasks" && tasksLoading);
 
-  // Use navbar loader for workspace/data loading
+  // Determine if we should show loading: either actively loading OR we don't have data yet
+  // In demo mode with ?slow param, use simulated loading
+  const shouldShowLoading = isDemo && simulatedLoading
+    ? true
+    : isLoading || (!workspace && !isDemo);
+
+  // Use navbar loader for workspace/data loading (keep it true during simulated loading)
   useEffect(() => {
-    setLoading(isLoading);
-  }, [isLoading, setLoading]);
+    if (isDemo && simulatedLoading) {
+      setLoading(true);
+      return;
+    }
+
+    setLoading(shouldShowLoading);
+  }, [shouldShowLoading, setLoading, isDemo, simulatedLoading]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -71,7 +113,8 @@ function WorkspaceDetail() {
   }
 
   // Show skeleton/loading state while workspace is loading, but use navbar loader
-  if (!workspace) {
+  // Also show skeleton if in demo mode with simulated loading
+  if (!workspace || (isDemo && simulatedLoading)) {
     return (
       <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
         <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
@@ -146,5 +189,9 @@ function WorkspaceDetail() {
 }
 
 export default function WorkspacePage() {
-  return <WorkspaceDetail />;
+  return (
+    <Suspense fallback={null}>
+      <WorkspaceDetail />
+    </Suspense>
+  );
 }

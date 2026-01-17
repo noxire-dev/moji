@@ -6,7 +6,7 @@ from app.dependencies import get_current_user, get_authenticated_client
 from app.models.task import Task, TaskCreate, TaskUpdate
 from app.exceptions import handle_exception
 from app.config import get_settings
-from app.utils import verify_workspace_ownership
+from app.utils import verify_workspace_ownership, is_over_limit
 from supabase import Client
 
 router = APIRouter(tags=["tasks"])
@@ -60,6 +60,19 @@ async def create_task(
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Workspace not found",
+            )
+
+        settings = get_settings()
+        if is_over_limit(
+            supabase,
+            "tasks",
+            "workspace_id",
+            str(workspace_id),
+            settings.max_tasks_per_workspace,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Task limit reached for this workspace",
             )
 
         data = task.model_dump()

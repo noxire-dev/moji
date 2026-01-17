@@ -96,6 +96,29 @@ class CacheControlMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class SlowResponseTestMiddleware(BaseHTTPMiddleware):
+    """Middleware to simulate slow responses for testing (debug mode only).
+
+    Add ?slow=15 to any API request to simulate a 15-second delay.
+    Only works when DEBUG=true in environment.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        # Only in debug mode
+        if settings.debug:
+            slow_param = request.query_params.get("slow")
+            if slow_param:
+                try:
+                    delay_seconds = float(slow_param)
+                    if 0 < delay_seconds <= 60:  # Max 60 seconds for safety
+                        import asyncio
+                        logger.info(f"Simulating slow response: {delay_seconds}s delay for {request.url.path}")
+                        await asyncio.sleep(delay_seconds)
+                except (ValueError, TypeError):
+                    pass  # Invalid parameter, ignore
+        return await call_next(request)
+
+
 class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
     """Reject requests with bodies larger than the configured limit."""
 
@@ -180,6 +203,10 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 # Cache control middleware (should be early in the stack)
 app.add_middleware(CacheControlMiddleware)
+
+# Slow response test middleware (debug only - for testing slow backend scenarios)
+if settings.debug:
+    app.add_middleware(SlowResponseTestMiddleware)
 
 # Request size limit middleware
 app.add_middleware(RequestSizeLimitMiddleware, max_bytes=1_000_000)

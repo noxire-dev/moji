@@ -6,7 +6,7 @@ from app.dependencies import get_current_user, get_authenticated_client
 from app.models.workspace import Workspace, WorkspaceCreate, WorkspaceUpdate
 from app.exceptions import handle_exception
 from app.config import get_settings
-from app.utils import seed_default_workspaces
+from app.utils import seed_default_workspaces, is_over_limit
 from supabase import Client
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
@@ -85,6 +85,19 @@ async def create_workspace(
 ):
     """Create a new workspace."""
     try:
+        settings = get_settings()
+        if is_over_limit(
+            supabase,
+            "workspaces",
+            "user_id",
+            str(user.id),
+            settings.max_workspaces_per_user,
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Workspace limit reached",
+            )
+
         data = workspace.model_dump()
         data["user_id"] = str(user.id)
 

@@ -276,14 +276,21 @@ Create project-specific spaces to organize your work. Each workspace contains it
 
 ## 🔮 Future Plans
 
+### Core Features
+- [ ] **Moji Daily** — Calendar-based daily planning system for organizing tasks and notes by date
 - [ ] Real-time updates with Supabase subscriptions
 - [ ] Drag-and-drop task reordering
 - [ ] Markdown support for notes and pages
 - [ ] Search across workspaces
 - [ ] More theme options
+
+### Integration & Sync
+- [ ] **Moji Daily Sync** — Bidirectional movement between Daily and Workspaces (`/daily` command)
+- [ ] Export/import functionality
+
+### Platform & Collaboration
 - [ ] Mobile app (React Native)
 - [ ] Workspace sharing and collaboration
-- [ ] Export/import functionality
 
 ---
 
