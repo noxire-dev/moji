@@ -7,14 +7,28 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Info, Palette } from "lucide-react";
+import { ArrowLeft, Info, MessageSquare, Palette } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 function SettingsContent() {
   const { user, loading, signOut, isDemo } = useAuth();
   const router = useRouter();
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
 
   useEffect(() => {
     if (!loading && !user) {
@@ -24,7 +38,7 @@ function SettingsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen min-h-[100dvh] bg-background">
         <AppHeader isDemo={isDemo} onSignOut={signOut} />
         <main className="max-w-2xl mx-auto px-6 py-8">
           <div className="mb-6">
@@ -47,8 +61,42 @@ function SettingsContent() {
     return null;
   }
 
+  const handleFeedbackSubmit = () => {
+    if (!feedbackMessage.trim()) {
+      toast.error("Please enter your feedback");
+      return;
+    }
+
+    if (isDemo) {
+      toast.info("Feedback is disabled in demo mode. Please sign in to send feedback.");
+      return;
+    }
+
+    const subject = encodeURIComponent("Moji Feedback");
+    const userInfo = `User: ${user.email}\n\nFeedback:\n`;
+    const fullBody = userInfo + feedbackMessage;
+    
+    // Mailto URLs have ~2000 char limit, truncate if needed
+    const maxBodyLength = 1800; // Leave room for encoding overhead
+    const truncatedBody = fullBody.length > maxBodyLength 
+      ? fullBody.substring(0, maxBodyLength) + "\n\n[Message truncated due to length]"
+      : fullBody;
+    
+    const body = encodeURIComponent(truncatedBody);
+    const mailtoLink = `mailto:feedback@usemoji.app?subject=${subject}&body=${body}`;
+    
+    try {
+      window.location.href = mailtoLink;
+      toast.success("Opening your email client...");
+      setFeedbackMessage("");
+      setFeedbackOpen(false);
+    } catch (error) {
+      toast.error("Failed to open email client. Please email feedback@usemoji.app directly.");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-[100dvh] bg-background">
       <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
 
       <main className="max-w-2xl mx-auto px-6 py-8">
@@ -86,6 +134,83 @@ function SettingsContent() {
             </CardHeader>
             <CardContent>
               <ThemeSwitcher />
+            </CardContent>
+          </Card>
+
+          <Separator />
+
+          {/* Feedback Section */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Feedback</CardTitle>
+                  <CardDescription>Share your thoughts, report bugs, or suggest features</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Dialog 
+                open={feedbackOpen} 
+                onOpenChange={(open) => {
+                  setFeedbackOpen(open);
+                  if (!open) {
+                    // Reset form when dialog closes (via X or outside click)
+                    setFeedbackMessage("");
+                  }
+                }}
+              >
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="w-full" disabled={isDemo}>
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Send Feedback
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Send Feedback</DialogTitle>
+                    <DialogDescription>
+                      {isDemo 
+                        ? "Please sign in to send feedback."
+                        : "We'd love to hear from you! Your feedback helps us improve Moji."}
+                    </DialogDescription>
+                  </DialogHeader>
+                  {!isDemo && (
+                    <>
+                      <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="feedback">Your message</Label>
+                          <Textarea
+                            id="feedback"
+                            placeholder="Tell us what you think, report a bug, or suggest a feature..."
+                            value={feedbackMessage}
+                            onChange={(e) => setFeedbackMessage(e.target.value)}
+                            rows={6}
+                            className="resize-none"
+                          />
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            setFeedbackOpen(false);
+                            setFeedbackMessage("");
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                        <Button onClick={handleFeedbackSubmit}>
+                          Send Feedback
+                        </Button>
+                      </DialogFooter>
+                    </>
+                  )}
+                </DialogContent>
+              </Dialog>
             </CardContent>
           </Card>
 

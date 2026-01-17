@@ -19,7 +19,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
         <AppHeader isDemo={isDemo} onSignOut={signOut} />
         <main className="flex-1 overflow-auto">
           <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-4">
@@ -40,7 +40,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-background">
       <AppHeader
         username={user.user_metadata?.username}
         email={user.email}

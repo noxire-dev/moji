@@ -5,23 +5,20 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-    Tooltip,
-    TooltipContent,
-    TooltipProvider,
-    TooltipTrigger,
+    TooltipProvider
 } from "@/components/ui/tooltip";
 import * as api from "@/lib/api";
+import { htmlToMarkdown, markdownToHtml } from "@/lib/editor";
 import { usePage } from "@/lib/hooks";
 import { logger } from "@/lib/logger";
-import { htmlToMarkdown, markdownToHtml } from "@/lib/editor";
-import { ArrowLeft, Save, Trash2, Heading1, Heading2, Heading3, List, ListOrdered, Code, Quote } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-import { useEditor, EditorContent, Extension } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
-import { SuggestionOptions, Suggestion } from "@tiptap/suggestion";
+import { EditorContent, Extension, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Suggestion } from "@tiptap/suggestion";
+import { ArrowLeft, Code, Heading1, Heading2, Heading3, List, ListOrdered, Quote, Save, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createRoot, Root } from "react-dom/client";
+import { toast } from "sonner";
 
 interface PageEditorProps {
   pageId: string;

@@ -1,25 +1,25 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
-  CheckSquare,
-  FileText,
-  Plus,
-  File,
-  Menu,
-  X,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
-import { toast } from "sonner";
+import * as api from "@/lib/api";
 import { usePages } from "@/lib/hooks";
 import { logger } from "@/lib/logger";
-import * as api from "@/lib/api";
+import { cn } from "@/lib/utils";
+import {
+    CheckSquare,
+    File,
+    FileText,
+    Menu,
+    Plus,
+    X,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface MobileSidebarProps {
   workspaceId: string;

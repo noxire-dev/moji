@@ -4,21 +4,21 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher";
 import * as api from "@/lib/api";
 import { usePages } from "@/lib/hooks";
-import { cn } from "@/lib/utils";
 import { logger } from "@/lib/logger";
+import { cn } from "@/lib/utils";
 import {
-  CheckSquare,
-  File,
-  FileText,
-  Plus,
+    CheckSquare,
+    File,
+    FileText,
+    Plus,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";

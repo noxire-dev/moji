@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthUser, supabase } from "@/lib/supabase";
-import { applyTheme, applyTexturePreference, defaultTheme, getThemeById, Theme, THEME_STORAGE_KEY, TEXTURE_STORAGE_KEY, themes } from "@/lib/themes";
+import { applyTexturePreference, applyTheme, defaultTheme, getThemeById, TEXTURE_STORAGE_KEY, Theme, THEME_STORAGE_KEY, themes } from "@/lib/themes";
 import { Session } from "@supabase/supabase-js";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";

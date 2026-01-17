@@ -54,6 +54,8 @@ Notion is great, but sometimes you just want a **focused space** for a project �
 
 - **Supabase** — Database, authentication, and storage
 - **PostgreSQL** — Relational database with RLS
+- **Vercel** — Frontend hosting and deployment for the Next.js app
+- **Render** — Backend hosting and deployment for the FastAPI API
 
 ---
 

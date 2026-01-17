@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, Suspense } from "react";
-import dynamic from "next/dynamic";
-import { useRouter, useParams } from "next/navigation";
 import { useAuth, useNavigationLoading } from "@/app/providers";
 import { AppHeader } from "@/components/AppHeader";
 import { Sidebar } from "@/components/Sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useWorkspace } from "@/lib/hooks";
+import dynamic from "next/dynamic";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 // Dynamically import PageEditor for code splitting
 const PageEditor = dynamic(() => import("@/components/PageEditor").then(mod => ({ default: mod.PageEditor })), {
@@ -54,7 +54,7 @@ function PageDetail() {
   // Only show full page spinner for initial auth loading
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -65,7 +65,7 @@ function PageDetail() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background">
+    <div className="h-screen h-[100dvh] flex flex-col bg-background">
       <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
 
       <div className="flex-1 flex overflow-hidden">

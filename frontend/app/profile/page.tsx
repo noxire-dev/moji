@@ -100,7 +100,7 @@ function ProfileContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen min-h-[100dvh] bg-background">
         <AppHeader isDemo={isDemo} onSignOut={signOut} />
         <main className="max-w-2xl mx-auto px-6 py-8">
           <div className="mb-6">
@@ -131,7 +131,7 @@ function ProfileContent() {
   }) : "Unknown";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen min-h-[100dvh] bg-background">
       <AppHeader username={user.user_metadata?.username} email={user.email} isDemo={isDemo} onSignOut={signOut} />
 
       <main className="max-w-2xl mx-auto px-6 py-8">

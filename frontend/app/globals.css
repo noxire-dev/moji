@@ -47,14 +47,27 @@
     @apply antialiased;
     color-scheme: dark;
     height: 100%;
-    scrollbar-gutter: stable;
   }
 
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    min-height: 100%;
-    overflow-y: scroll;
+    min-height: 100vh;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  main {
+    scrollbar-gutter: stable;
+  }
+
+  @supports (height: 100dvh) {
+    body {
+      min-height: 100dvh;
+      height: 100dvh;
+    }
   }
 
   /* Smooth interactions for interactive elements */
@@ -64,6 +77,24 @@
   textarea,
   [role="button"] {
     @apply transition-colors transition-shadow duration-150;
+  }
+
+  /* Prevent text selection and tap highlights on interactive elements */
+  button,
+  a,
+  [role="button"],
+  [role="link"] {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* Allow text selection in input fields */
+  input,
+  textarea {
+    user-select: text;
+    -webkit-user-select: text;
   }
 }
 
@@ -294,6 +325,21 @@
   background: hsl(var(--card) / 0.8);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+}
+
+/* Prevent text selection on card links for better mobile experience */
+a > * {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* But allow selection for actual text content areas */
+p:not(a *),
+div[contenteditable="true"],
+.prose *,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* Paper texture - subtle grain overlay for Japanese Pastel theme */
