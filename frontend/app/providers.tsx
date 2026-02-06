@@ -90,6 +90,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const win = window as typeof window & { __mojiFetchPatched?: boolean };
+      if (!win.__mojiFetchPatched) {
+        win.__mojiFetchPatched = true;
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+          const requestUrl = typeof input === "string" ? input : input instanceof Request ? input.url : String(input);
+          if (requestUrl.startsWith("http://moji-production-8243.up.railway.app")) {
+            const upgradedUrl = requestUrl.replace(/^http:\/\//, "https://");
+            console.warn("Moji fetch upgraded to HTTPS:", requestUrl, upgradedUrl, new Error().stack);
+            if (typeof input === "string") {
+              input = upgradedUrl;
+            } else if (input instanceof Request) {
+              input = new Request(upgradedUrl, input);
+            }
+          }
+          return originalFetch(input, init);
+        };
+      }
+    }
+
     const demoFromUrl = typeof window !== "undefined" && (() => {
       const { pathname, search } = window.location;
       if (pathname.startsWith("/workspaces/demo-")) {
