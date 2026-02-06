@@ -1,6 +1,20 @@
 import { supabase } from "./supabase";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+function normalizeApiBase(base: string): string {
+  try {
+    const url = new URL(base);
+    if (url.protocol === "http:" && url.hostname.endsWith(".up.railway.app")) {
+      url.protocol = "https:";
+    }
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    return base;
+  }
+}
+
+const API_BASE = normalizeApiBase(RAW_API_BASE);
 
 // Token cache to avoid repeated lookups
 let cachedToken: string | null = null;
