@@ -114,7 +114,15 @@ async function apiFetch<T>(
     throw new ApiError(401, "Not authenticated");
   }
 
-  const response = await fetch(`${API_BASE}/api/v1${endpoint}`, {
+  let requestUrl = `${API_BASE}/api/v1${endpoint}`;
+  if (typeof window !== "undefined" && window.location.protocol === "https:" && requestUrl.startsWith("http://")) {
+    const secureUrl = requestUrl.replace(/^http:\/\//, "https://");
+    console.warn("Moji API request upgraded to HTTPS:", requestUrl, secureUrl);
+    requestUrl = secureUrl;
+  }
+  console.info("Moji API request:", requestUrl);
+
+  const response = await fetch(requestUrl, {
     ...options,
     headers: {
       "Content-Type": "application/json",
