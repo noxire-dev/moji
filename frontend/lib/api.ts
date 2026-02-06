@@ -5,7 +5,8 @@ const RAW_API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 function normalizeApiBase(base: string): string {
   try {
     const url = new URL(base);
-    if (url.protocol === "http:" && url.hostname.endsWith(".up.railway.app")) {
+    const isHttpsPage = typeof window !== "undefined" && window.location.protocol === "https:";
+    if (url.protocol === "http:" && (url.hostname.endsWith(".up.railway.app") || isHttpsPage)) {
       url.protocol = "https:";
     }
     return url.toString().replace(/\/$/, "");
@@ -15,6 +16,14 @@ function normalizeApiBase(base: string): string {
 }
 
 const API_BASE = normalizeApiBase(RAW_API_BASE);
+
+if (typeof window !== "undefined") {
+  const win = window as typeof window & { __mojiApiBaseLogged?: boolean };
+  if (!win.__mojiApiBaseLogged) {
+    win.__mojiApiBaseLogged = true;
+    console.info("Moji API base:", API_BASE);
+  }
+}
 
 // Token cache to avoid repeated lookups
 let cachedToken: string | null = null;
