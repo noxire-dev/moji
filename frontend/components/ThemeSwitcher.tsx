@@ -6,7 +6,15 @@ import { Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 export function ThemeSwitcher() {
-  const { theme: currentTheme, themes, setTheme, textureEnabled, setTexture } = useTheme();
+  const {
+    theme: currentTheme,
+    themes,
+    setTheme,
+    textureEnabled,
+    setTexture,
+    textureIntensity,
+    setTextureIntensity,
+  } = useTheme();
 
   return (
     <div className="space-y-4">
@@ -85,6 +93,31 @@ export function ThemeSwitcher() {
           checked={textureEnabled}
           onCheckedChange={setTexture}
           aria-label="Toggle paper texture"
+        />
+      </div>
+
+      <div className="rounded-lg border border-border/60 bg-card/40 px-3 py-2 space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium">Texture intensity (dev)</p>
+            <p className="text-xs text-muted-foreground">
+              Increase if the grain is too subtle
+            </p>
+          </div>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {textureIntensity.toFixed(2)}
+          </span>
+        </div>
+        <input
+          type="range"
+          min={0}
+          max={0.6}
+          step={0.01}
+          value={textureIntensity}
+          onChange={(event) => setTextureIntensity(Number.parseFloat(event.target.value))}
+          className="w-full accent-primary"
+          aria-label="Texture intensity"
+          disabled={!textureEnabled}
         />
       </div>
     </div>

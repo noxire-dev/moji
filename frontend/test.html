@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moji Backend Tester</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #16161e; color: #dcd7ba; }
+        .container { max-width: 800px; margin: auto; background-color: #2a2a36; padding: 20px; border-radius: 8px; }
+        h1, h2 { color: #7e9cd8; }
+        button, input[type="text"], textarea {
+            padding: 10px; margin: 5px 0; border-radius: 4px; border: 1px solid #727169;
+            background-color: #1a1a22; color: #dcd7ba; width: calc(100% - 10px);
+        }
+        button { background-color: #76946a; cursor: pointer; color: white; border: none; width: auto;}
+        button:hover { background-color: #6a825e; }
+        .section { margin-bottom: 30px; border: 1px solid #727169; padding: 15px; border-radius: 8px; }
+        pre { background-color: #1a1a22; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Moji Backend Tester</h1>
+        <p>Moji Metadata: <span id="mojiMetadata"></span></p>
+        <div class="section">
+            <h2>Workspaces</h2>
+            <button onclick="fetchWorkspaces()">Fetch Workspaces</button>
+            <input type="text" id="newWorkspaceName" placeholder="New workspace name">
+            <button onclick="createWorkspace()">Create Workspace</button>
+            <h3>Workspaces Data:</h3>
+            <pre id="workspacesOutput"></pre>
+        </div>
+
+        <div class="section">
+            <h2>Tasks</h2>
+            <button onclick="fetchTasks()">Fetch Tasks</button>
+            <input type="text" id="newTaskContent" placeholder="New task content">
+            <button onclick="createTask()">Create Task</button>
+            <h3>Tasks Data:</h3>
+            <pre id="tasksOutput"></pre>
+        </div>
+
+        <div class="section">
+            <h2>Notes</h2>
+            <button onclick="fetchNotes()">Fetch Notes</button>
+            <input type="text" id="newNoteTitle" placeholder="New note title">
+            <textarea id="newNoteContent" placeholder="New note content"></textarea>
+            <input type="text" id="newNoteTags" placeholder="Tags (comma-separated)">
+            <button onclick="createNote()">Create Note</button>
+            <h3>Notes Data:</h3>
+            <pre id="notesOutput"></pre>
+        </div>
+    </div>
+
+    <script>
+        const BASE = 'http://127.0.0.1:5000';
+        const API_BASE = BASE + '/v1/api';
+        // --- Helper Function ---
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const options = {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            if (body) {
+                options.body = JSON.stringify(body);
+            }
+            try {
+                const response = await fetch(`${API_BASE}${endpoint}`, options);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`HTTP error! Status: ${response.status}, Details: ${JSON.stringify(errorData)}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`API Call to ${endpoint} failed:`, error);
+                alert(`Error: ${error.message || error}`);
+                return null;
+            }
+        }
+
+        // --- Workspace Functions ---
+        async function fetchWorkspaces() {
+            const data = await apiCall(endpoint='/workspaces');
+            if (data) document.getElementById('workspacesOutput').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function createWorkspace() {
+            const name = document.getElementById('newWorkspaceName').value;
+            if (!name) { alert('Workspace name is required!'); return; }
+            const data = await apiCall(endpoint='/workspaces', method='POST', body={ name: name, description: 'Created from tester' });
+            if (data) {
+                document.getElementById('newWorkspaceName').value = '';
+                fetchWorkspaces();
+            }
+        }
+
+        // --- Task Functions ---
+        async function fetchTasks() {
+            const data = await apiCall(endpoint='/tasks');
+            if (data) document.getElementById('tasksOutput').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function createTask() {
+            const content = document.getElementById('newTaskContent').value;
+            if (!content) { alert('Task content is required!'); return; }
+            const data = await apiCall(endpoint='/tasks', method='POST', body={ content: content, priority: 1 }); // Default priority to 1 (medium)
+            if (data) {
+                document.getElementById('newTaskContent').value = '';
+                fetchTasks();
+            }
+        }
+
+        // --- Note Functions ---
+        async function fetchNotes() {
+            const data = await apiCall(endpoint='/notes');
+            if (data) document.getElementById('notesOutput').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function createNote() {
+            const title = document.getElementById('newNoteTitle').value;
+            const content = document.getElementById('newNoteContent').value;
+            const tags = document.getElementById('newNoteTags').value.split(',').map(tag => tag.trim()).filter(tag => tag);
+
+            if (!title || !content) { alert('Note title and content are required!'); return; }
+
+            const data = await apiCall(endpoint='/notes', method='POST', body={ title: title, content: content, tags: tags });
+            if (data) {
+                document.getElementById('newNoteTitle').value = '';
+                document.getElementById('newNoteContent').value = '';
+                document.getElementById('newNoteTags').value = '';
+                fetchNotes();
+            }
+        }
+
+        // Initial fetch on load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchWorkspaces();
+            fetchTasks();
+            fetchNotes();
+        });
+    </script>
+</body>
+</html>

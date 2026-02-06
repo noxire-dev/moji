@@ -13,7 +13,7 @@ class Settings(BaseSettings):
 
     # App
     debug: bool = False
-    allowed_origins: str = "http://localhost:3000"
+    allowed_origins: str = "http://localhost:3000,http://localhost:3001"
     max_workspaces_per_user: int = 20
     max_pages_per_workspace: int = 200
     max_notes_per_workspace: int = 500

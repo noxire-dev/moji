@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moji - Universal Workspace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Colors */
+            --bg: #16161e;
+            --bg-secondary: #1a1a22;
+            --bg-tertiary: #2a2437;
+            --sidebar-bg: rgba(22, 22, 30, 0.9);
+            --card-bg: rgba(42, 42, 54, 0.7);
+            --glass-bg: rgba(42, 42, 54, 0.5);
+
+            --fg: #dcd7ba;
+            --fg-secondary: #9cabca;
+            --fg-tertiary: #727169;
+
+            --border: rgba(220, 215, 186, 0.06);
+            --glass-border: rgba(220, 215, 186, 0.08);
+            --hover-bg: rgba(126, 156, 216, 0.12);
+
+            --primary: #7e9cd8;
+            --accent1: #76946a;
+            --accent2: #e98a5b;
+            --accent3: #c34043;
+
+            --command-bg: rgba(42, 42, 54, 0.2);
+            --command-bg-focus: rgba(42, 42, 54, 0.8);
+            --command-shadow: rgba(0, 0, 0, 0.3);
+
+            --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--fg);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 240px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-right: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            font-size: 0.8rem;
+            color: var(--fg-tertiary);
+            margin-bottom: 2rem;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--fg-tertiary);
+            margin-bottom: 0.75rem;
+        }
+
+        .nav-item {
+            padding: 0.75rem 0.875rem;
+            border-radius: 10px;
+            color: var(--fg-secondary);
+            cursor: pointer;
+            margin-bottom: 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-item:hover {
+            background: var(--hover-bg);
+            color: var(--fg);
+            transform: translateX(2px);
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(126, 156, 216, 0.3);
+        }
+
+        .workspace-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0.875rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .workspace-item:hover {
+            background: var(--hover-bg);
+            border-color: var(--glass-border);
+            transform: translateX(2px);
+        }
+
+        .workspace-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .workspace-indicator.code { background: var(--primary); }
+        .workspace-indicator.work { background: var(--accent1); }
+        .workspace-indicator.personal { background: var(--accent2); }
+
+        .workspace-info {
+            flex: 1;
+        }
+
+        .workspace-name {
+            font-weight: 500;
+            font-size: 0.85rem;
+            margin-bottom: 0.125rem;
+        }
+
+        .workspace-meta {
+            font-size: 0.7rem;
+            color: var(--fg-tertiary);
+        }
+
+        /* Theme Colors */
+        .theme-colors {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .color-option {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: var(--fg);
+            box-shadow: 0 2px 8px rgba(126, 156, 216, 0.3);
+        }
+
+        .color-purple { background: #7e9cd8; }
+        .color-green { background: #76946a; }
+        .color-orange { background: #e98a5b; }
+        .color-red { background: #c34043; }
+        .color-blue { background: #7aa2f7; }
+        .color-pink { background: #c678dd; }
+        .color-teal { background: #4db5bd; }
+        .color-yellow { background: #d7ba7d; }
+
+        /* Main */
+        .main {
+            margin-left: 240px;
+            padding: 2rem;
+            padding-bottom: 8rem;
+        }
+
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 32px var(--command-shadow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.625rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .btn-add {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.2s;
+            font-weight: 300;
+        }
+
+        .btn-add:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(126, 156, 216, 0.4);
+        }
+
+        /* Tasks */
+        .task {
+            display: flex;
+            gap: 0.875rem;
+            padding: 1rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .task:hover {
+            background: var(--hover-bg);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .task:hover .btn-delete {
+            opacity: 1;
+        }
+
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 2px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .checkbox:hover {
+            border-color: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .checkbox.checked {
+            background: var(--accent1);
+            border-color: var(--accent1);
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            color: white;
+            font-size: 11px;
+            top: -2px;
+            left: 1px;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-text {
+            font-weight: 500;
+            margin-bottom: 0.375rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .task.completed .task-text {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--fg-tertiary);
+        }
+
+        .priority {
+            padding: 0.125rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .priority-high { background: rgba(195, 64, 67, 0.15); color: var(--accent3); }
+        .priority-medium { background: rgba(233, 138, 91, 0.15); color: var(--accent2); }
+        .priority-low { background: rgba(118, 148, 106, 0.15); color: var(--accent1); }
+
+        .btn-delete {
+            background: none;
+            border: none;
+            color: var(--fg-tertiary);
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+            font-size: 1rem;
+            padding: 0.25rem;
+        }
+
+        .btn-delete:hover {
+            color: var(--accent3);
+        }
+
+        /* Notes */
+        .note {
+            padding: 1.25rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 0.3s ease;
+            position: relative;
+        }
+
+        .note:hover {
+            background: var(--hover-bg);
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+
+        .note:hover .btn-delete {
+            opacity: 1;
+        }
+
+        .note-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        .note-content {
+            color: var(--fg-secondary);
+            font-size: 0.8rem;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+        }
+
+        .tag {
+            background: var(--primary);
+            color: white;
+            padding: 0.125rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 400px;
+            width: 90%;
+            animation: slideUp 0.3s;
+        }
+
+        .modal-content.large {
+            max-width: 700px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: var(--fg-secondary);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--fg);
+            font-family: var(--font);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(126, 156, 216, 0.2);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-textarea.large {
+            min-height: 300px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 0.75rem;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: var(--font);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--fg-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--glass-bg);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(126, 156, 216, 0.4);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: 0 8px 32px var(--command-shadow);
+            z-index: 3000;
+            animation: slideInRight 0.3s;
+            display: none;
+        }
+
+        .toast.active {
+            display: block;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Command Bar */
+        .command-bar {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 240px - 4rem);
+            max-width: 580px;
+            z-index: 100;
+        }
+
+        .command-suggestions {
+            background: var(--card-bg);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            box-shadow: 0 8px 32px var(--command-shadow);
+        }
+
+        .command-suggestions.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .suggestion-item {
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            color: var(--fg-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.25rem;
+        }
+
+        .suggestion-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .suggestion-item:hover {
+            background: var(--hover-bg);
+            color: var(--fg);
+        }
+
+        .command-input-container {
+            background: var(--command-bg);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px var(--command-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .command-input-container:focus-within {
+            background: var(--command-bg-focus);
+            border-color: var(--primary);
+            box-shadow: 0 12px 40px var(--command-shadow);
+            transform: translateY(-2px);
+        }
+
+        .command-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            padding: 1.25rem 1.5rem;
+            color: var(--fg);
+            font-size: 0.9rem;
+            font-family: var(--font);
+            outline: none;
+            resize: none;
+            line-height: 1.4;
+        }
+
+        .command-input::placeholder {
+            color: var(--fg-tertiary);
+            opacity: 0.8;
+        }
+
+        /* Empty State */
+        .empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--fg-tertiary);
+            font-size: 0.85rem;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--glass-border);
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .main {
+                margin-left: 0;
+            }
+            .command-bar {
+                width: calc(100% - 2rem);
+            }
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="logo">Moji</div>
+        <div class="subtitle">Universal Workspace</div>
+
+        <div class="nav-section">
+            <div class="nav-title">Overview</div>
+            <div class="nav-item active">Dashboard</div>
+            <div class="nav-item">All Tasks</div>
+            <div class="nav-item">All Notes</div>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-title">Workspaces</div>
+            <div id="workspacesList"></div>
+        </div>
+
+        <div class="theme-colors">
+            <div class="color-option color-purple active" data-color="purple" title="Purple"></div>
+            <div class="color-option color-blue" data-color="blue" title="Blue"></div>
+            <div class="color-option color-green" data-color="green" title="Green"></div>
+            <div class="color-option color-orange" data-color="orange" title="Orange"></div>
+            <div class="color-option color-red" data-color="red" title="Red"></div>
+            <div class="color-option color-pink" data-color="pink" title="Pink"></div>
+            <div class="color-option color-teal" data-color="teal" title="Teal"></div>
+            <div class="color-option color-yellow" data-color="yellow" title="Yellow"></div>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Tasks</h2>
+                    <div class="card-actions">
+                        <span class="badge" id="taskCount">0</span>
+                        <button class="btn-add" onclick="app.openModal('task')" title="Add task">+</button>
+                    </div>
+                </div>
+                <div id="tasksList"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Notes</h2>
+                    <div class="card-actions">
+                        <span class="badge" id="noteCount">0</span>
+                        <button class="btn-add" onclick="app.openModal('note')" title="Add note">+</button>
+                    </div>
+                </div>
+                <div id="notesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <h3 class="modal-title">Add Task</h3>
+            <form onsubmit="app.tasks.create(event)">
+                <div class="form-group">
+                    <label class="form-label">Task</label>
+                    <input type="text" class="form-input" id="taskInput" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select" id="taskPriority">
+                        <option value="0">Low</option>
+                        <option value="1" selected>Medium</option>
+                        <option value="2">High</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('task')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Note Modal (Add) -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content">
+            <h3 class="modal-title">Add Note</h3>
+            <form onsubmit="app.notes.create(event)">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="noteTitle" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-textarea" id="noteContent" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tags (comma-separated)</label>
+                    <input type="text" class="form-input" id="noteTags" placeholder="work, ideas">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('note')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Note</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Note Viewer/Editor Modal -->
+    <div class="modal" id="noteViewModal">
+        <div class="modal-content large">
+            <h3 class="modal-title" id="noteViewTitle"></h3>
+            <form onsubmit="app.notes.update(event)">
+                <input type="hidden" id="noteEditId">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" id="noteEditTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Content</label>
+                    <textarea class="form-textarea large" id="noteEditContent" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tags (comma-separated)</label>
+                    <input type="text" class="form-input" id="noteEditTags" placeholder="work, ideas">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="app.closeModal('noteView')">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <div class="command-bar">
+        <div class="command-suggestions" id="suggestions">
+            <div class="suggestion-item" onclick="app.commands.insert('/task ')">+ Add task</div>
+            <div class="suggestion-item" onclick="app.commands.insert('/note ')">+ Add note</div>
+            <div class="suggestion-item" onclick="app.commands.insert('/workspace ')">+ Add workspace</div>
+        </div>
+        <div class="command-input-container">
+            <textarea id="commandInput" class="command-input" rows="1" placeholder="Type / for commands or Cmd+K..."></textarea>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,7 +1,19 @@
 "use client";
 
 import { AuthUser, supabase } from "@/lib/supabase";
-import { applyTexturePreference, applyTheme, defaultTheme, getThemeById, TEXTURE_STORAGE_KEY, Theme, THEME_STORAGE_KEY, themes } from "@/lib/themes";
+import {
+  applyTextureIntensity,
+  applyTexturePreference,
+  applyTheme,
+  DEFAULT_TEXTURE_INTENSITY,
+  defaultTheme,
+  getThemeById,
+  TEXTURE_INTENSITY_STORAGE_KEY,
+  TEXTURE_STORAGE_KEY,
+  Theme,
+  THEME_STORAGE_KEY,
+  themes,
+} from "@/lib/themes";
 import { Session } from "@supabase/supabase-js";
 import { usePathname } from "next/navigation";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -36,6 +48,8 @@ interface ThemeContextType {
   setTheme: (themeId: string) => void;
   textureEnabled: boolean;
   setTexture: (enabled: boolean) => void;
+  textureIntensity: number;
+  setTextureIntensity: (intensity: number) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType>({
@@ -44,6 +58,8 @@ const ThemeContext = createContext<ThemeContextType>({
   setTheme: () => {},
   textureEnabled: false,
   setTexture: () => {},
+  textureIntensity: DEFAULT_TEXTURE_INTENSITY,
+  setTextureIntensity: () => {},
 });
 
 // ============================================================================
@@ -159,14 +175,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [currentTheme, setCurrentTheme] = useState<Theme>(defaultTheme);
   const [mounted, setMounted] = useState(false);
   const [textureEnabled, setTextureEnabled] = useState(false);
+  const [textureIntensity, setTextureIntensity] = useState(DEFAULT_TEXTURE_INTENSITY);
 
   // Load theme from localStorage on mount (client-side only)
   useEffect(() => {
     setMounted(true);
     const savedThemeId = localStorage.getItem(THEME_STORAGE_KEY);
     const savedTexture = localStorage.getItem(TEXTURE_STORAGE_KEY);
+    const savedTextureIntensity = localStorage.getItem(TEXTURE_INTENSITY_STORAGE_KEY);
     const texturePref = savedTexture === "true";
+    const parsedIntensity = savedTextureIntensity ? Number.parseFloat(savedTextureIntensity) : DEFAULT_TEXTURE_INTENSITY;
+    const intensityPref = Number.isFinite(parsedIntensity) ? parsedIntensity : DEFAULT_TEXTURE_INTENSITY;
     setTextureEnabled(texturePref);
+    setTextureIntensity(intensityPref);
     if (savedThemeId) {
       const theme = getThemeById(savedThemeId);
       setCurrentTheme(theme);
@@ -174,12 +195,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setTimeout(() => {
         applyTheme(theme);
         applyTexturePreference(texturePref);
+        applyTextureIntensity(intensityPref);
       }, 0);
     } else {
       // Apply default theme on mount
       setTimeout(() => {
         applyTheme(defaultTheme);
         applyTexturePreference(texturePref);
+        applyTextureIntensity(intensityPref);
       }, 0);
     }
   }, []);
@@ -197,6 +220,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [textureEnabled, mounted]);
 
+  useEffect(() => {
+    if (mounted) {
+      applyTextureIntensity(textureIntensity);
+    }
+  }, [textureIntensity, mounted]);
+
   const setTheme = (themeId: string) => {
     const theme = getThemeById(themeId);
     setCurrentTheme(theme);
@@ -208,8 +237,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(TEXTURE_STORAGE_KEY, String(enabled));
   };
 
+  const setTextureIntensityValue = (intensity: number) => {
+    setTextureIntensity(intensity);
+    localStorage.setItem(TEXTURE_INTENSITY_STORAGE_KEY, String(intensity));
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme: currentTheme, themes, setTheme, textureEnabled, setTexture }}>
+    <ThemeContext.Provider
+      value={{
+        theme: currentTheme,
+        themes,
+        setTheme,
+        textureEnabled,
+        setTexture,
+        textureIntensity,
+        setTextureIntensity: setTextureIntensityValue,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
   );

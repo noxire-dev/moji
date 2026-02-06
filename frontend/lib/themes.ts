@@ -169,6 +169,9 @@ export function applyTheme(theme: Theme): void {
 export const THEME_STORAGE_KEY = "moji_theme";
 
 export const TEXTURE_STORAGE_KEY = "moji_texture";
+export const TEXTURE_INTENSITY_STORAGE_KEY = "moji_texture_intensity";
+
+export const DEFAULT_TEXTURE_INTENSITY = 0.12;
 
 export function applyTexturePreference(enabled: boolean): void {
   if (typeof window === "undefined") return;
@@ -183,4 +186,11 @@ export function applyTexturePreference(enabled: boolean): void {
       body?.classList.remove("theme-paper-texture");
     }
   });
+}
+
+export function applyTextureIntensity(intensity: number): void {
+  if (typeof window === "undefined") return;
+  const root = document.documentElement;
+  const clamped = Math.min(Math.max(intensity, 0), 0.6);
+  root.style.setProperty("--texture-opacity", clamped.toString());
 }
